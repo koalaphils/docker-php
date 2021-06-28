@@ -1,6 +1,5 @@
 FROM php:8-apache
 LABEL description="PHP base image" \
-    version="1.0" \
     "com.koalaphils.vendor"="Koala Technologies"
 
 RUN set -eux; \
@@ -10,23 +9,16 @@ RUN set -eux; \
     curl \
     git \
     imagemagick \
-#    libbrotli1 \
     libcmph0 \
     libedit2 \
-#    libevent-2.1-6 \
-#    libevent-extra-2.1-6 \
-#    libevent-openssl-2.1-6 \
-#    libevent-pthreads-2.1-6 \
     libhashkit2 \
     libjpeg62-turbo \
-    liblz4-1 \
     libmemcached11 \
     libmemcachedutil2 \
     libmpdec2 \
     libmsgpackc2 \
     libpng16-16 \
     libsodium23 \
-    libuuid1 \
     libxpm4 \
     libzip4 \
     netcat \
@@ -37,15 +29,12 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
     gettext-base \
-#    libbrotli-dev \
     libcmph-dev \
     libcurl4-openssl-dev \
     libedit-dev \
-#    libevent-dev \
     libicu-dev \
     libjpeg-dev \
     libjpeg62-turbo-dev \
-    liblz4-dev \
     libmagickwand-dev \
     libmemcached-dev \
     libmpdec-dev \
@@ -58,7 +47,6 @@ RUN set -eux; \
     libxpm-dev \
     libzip-dev \
     libbz2-dev \
-    uuid-dev \
     zlib1g-dev \
     ${PHP_EXTRA_BUILD_DEPS:-} \
     ; \
@@ -85,68 +73,40 @@ RUN set -eux; \
     ./configure; \
     make && make install; \
     cd -; \
-#  git clone --recursive --depth=1 https://github.com/igbinary/igbinary.git $(pecl config-get temp_dir)/igbinary; \
   pecl install --onlyreqdeps --nobuild igbinary; \
     cd "$(pecl config-get temp_dir)/igbinary"; \
     phpize; \
     ./configure; \
     make && make install; \
     cd -; \
-#  git clone --recursive --depth=1 https://github.com/msgpack/msgpack-php.git $(pecl config-get temp_dir)/msgpack; \
   pecl install --onlyreqdeps --nobuild msgpack; \
     cd "$(pecl config-get temp_dir)/msgpack"; \
     phpize; \
     ./configure; \
     make && make install; \
     cd -; \
-  pecl install --onlyreqdeps --nobuild lzf; \
-    cd "$(pecl config-get temp_dir)/LZF"; \
-    phpize; \
-    ./configure; \
-    make && make install; \
-    cd -; \
-#  git clone --recursive --depth=1 https://github.com/krakjoe/apcu.git $(pecl config-get temp_dir)/apcu; \
   pecl install --onlyreqdeps --nobuild apcu; \
     cd "$(pecl config-get temp_dir)/apcu"; \
     phpize; \
     ./configure; \
     make && make install; \
     cd -; \
-  git clone --recursive --depth=1 https://github.com/Imagick/imagick.git $(pecl config-get temp_dir)/imagick; \
-#  pecl install --onlyreqdeps --nobuild imagick; \
+  pecl install --onlyreqdeps --nobuild imagick; \
     cd "$(pecl config-get temp_dir)/imagick"; \
     phpize; \
     ./configure; \
     make && make install; \
     cd -; \
-#  git clone --recursive --depth=1 https://github.com/kjdev/php-ext-brotli.git $(pecl config-get temp_dir)/php-ext-brotli; \
-#    cd "$(pecl config-get temp_dir)/php-ext-brotli"; \
-#    phpize; \
-#    ./configure --with-libbrotli; \
-#    make && make install; \
-#    cd -; \
-#  git clone --recursive --depth=1 https://bitbucket.org/osmanov/pecl-event.git $(pecl config-get temp_dir)/event; \
-#    cd "$(pecl config-get temp_dir)/event"; \
-#    phpize; \
-#    ./configure --with-event-core --with-event-extra --with-event-openssl --with-event-pthreads; \
-#    make && make install; \
-#    cd -; \
   pecl install --onlyreqdeps --nobuild redis; \
     cd "$(pecl config-get temp_dir)/redis"; \
     phpize; \
-    ./configure --enable-redis-igbinary --enable-redis-json --enable-redis-msgpack --with-liblz4=/usr/include/; \
+    ./configure --enable-redis-igbinary --enable-redis-json --enable-redis-msgpack; \
     make && make install; \
     cd -; \
   pecl install --onlyreqdeps --nobuild memcached; \
     cd "$(pecl config-get temp_dir)/memcached"; \
     phpize; \
     ./configure --enable-memcached-igbinary --enable-memcached-json --enable-memcached-session --enable-memcached-sasl --enable-memcached-msgpack; \
-    make && make install; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild uuid; \
-    cd "$(pecl config-get temp_dir)/uuid"; \
-    phpize; \
-    ./configure; \
     make && make install; \
     cd -; \
   pecl install --onlyreqdeps --nobuild xdebug; \
@@ -165,14 +125,11 @@ RUN set -eux; \
     apcu \
     decimal \
     ev \
-#    event \
     igbinary \
     imagick \
-#    lzf \
     msgpack \
     opcache \
     redis \
-#    uuid \
     ; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
   apt-mark auto '.*' > /dev/null; \
