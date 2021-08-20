@@ -34,13 +34,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-#      - name: Cache Docker Layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
       - name: PHP 8 FPM
         uses: docker/build-push-action@v2
         with:
@@ -48,8 +41,8 @@ jobs:
           file: ./Dockerfile-8-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: koalaphils/php:8-fpm
       - name: PHP 8 FPM Buster
@@ -59,8 +52,8 @@ jobs:
           file: ./Dockerfile-8-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           build-args: OS=buster
           tags: koalaphils/php:8-fpm-buster
@@ -83,13 +76,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-#      - name: Cache Docker Layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
       - name: PHP 8 Apache
         uses: docker/build-push-action@v2
         with:
@@ -97,8 +83,8 @@ jobs:
           file: ./Dockerfile-8-apache
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: koalaphils/php:8-apache
       - name: PHP 8 Apache Buster
@@ -108,8 +94,8 @@ jobs:
           file: ./Dockerfile-8-apache
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           build-args: OS=buster
           tags: koalaphils/php:8-apache-buster
@@ -132,13 +118,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-#      - name: Cache Docker Layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
       - name: PHP 7.4 FPM
         uses: docker/build-push-action@v2
         with:
@@ -146,8 +125,8 @@ jobs:
           file: ./Dockerfile-7.4-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: koalaphils/php:7.4-fpm
       - name: PHP 7.4 FPM Buster
@@ -157,8 +136,8 @@ jobs:
           file: ./Dockerfile-7.4-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           build-args: OS=buster
           tags: koalaphils/php:7.4-fpm-buster
@@ -181,13 +160,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-#      - name: Cache Docker Layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
       - name: PHP 7.4 Apache
         uses: docker/build-push-action@v2
         with:
@@ -195,8 +167,8 @@ jobs:
           file: ./Dockerfile-7.4-apache
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: koalaphils/php:7.4-apache
       - name: PHP 7.4 Apache Buster
@@ -206,8 +178,8 @@ jobs:
           file: ./Dockerfile-7.4-apache
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           build-args: OS=buster
           tags: koalaphils/php:7.4-apache-buster
@@ -230,13 +202,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-#      - name: Cache Docker Layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
       - name: PHP 7.3 FPM
         uses: docker/build-push-action@v2
         with:
@@ -244,8 +209,8 @@ jobs:
           file: ./Dockerfile-7.3-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: koalaphils/php:7.3-fpm
       - name: PHP 7.3 FPM Buster
@@ -255,8 +220,8 @@ jobs:
           file: ./Dockerfile-7.3-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           build-args: OS=buster
           tags: koalaphils/php:7.3-fpm-buster
