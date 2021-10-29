@@ -8,11 +8,13 @@ LABEL description="PHP base image" \
 RUN set -eux; \
   apt-get update \
   && LIBMPDEC=`apt-cache pkgnames libmpdec | head -1` \
+  && LIBAVIF=`apt-cache pkgnames libavif | head -1` \
   && apt-get install --no-install-recommends -y \
     ca-certificates \
     curl \
     git \
     imagemagick \
+    ${LIBAVIF} \
     libcmph0 \
     libedit2 \
     libhashkit2 \
@@ -26,6 +28,7 @@ RUN set -eux; \
     libxpm4 \
     libzip4 \
     netcat \
+    tzdata \
     unzip \
   ; \
   apt-mark manual '.*' > /dev/null; \
@@ -33,17 +36,20 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
     gettext-base \
+    libavif-dev \
     libcmph-dev \
     libcurl4-openssl-dev \
     libedit-dev \
     libicu-dev \
     libjpeg-dev \
     libjpeg62-turbo-dev \
+    libmagick++-dev \
     libmagickwand-dev \
     libmemcached-dev \
     libmpdec-dev \
     libmsgpack-dev \
     libpng-dev \
+    libpng++-dev \
     libsodium-dev \
     libssl-dev \
     libwebp-dev \
@@ -53,8 +59,8 @@ RUN set -eux; \
     libbz2-dev \
     zlib1g-dev \
     ${PHP_EXTRA_BUILD_DEPS:-} \
-    ; \
-  export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
+    ;
+RUN export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
     ; \
   docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype \
     ; \
