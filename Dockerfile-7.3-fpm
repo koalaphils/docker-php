@@ -60,16 +60,12 @@ RUN set -eux; \
   docker-php-ext-configure gd --with-jpeg-dir=/usr/include --with-png-dir=/usr/include --with-webp-dir=/usr/include --with-freetype-dir=/usr/include --with-xpm-dir=/usr/include \
     ; \
   docker-php-ext-install -j$(nproc) \
-    bcmath \
-    bz2 \
     gd \
     gettext \
     intl \
     opcache \
     pcntl \
-    pdo_mysql \
     sockets \
-    zip \
     ; \
   pecl update-channels \
     ; \
