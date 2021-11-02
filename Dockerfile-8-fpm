@@ -1,9 +1,7 @@
-ARG OS
-FROM php:8-fpm-${OS:-bullseye}
-ARG OS
-ENV OS=${OS:-bullseye}
-LABEL description="PHP base image" \
-    "com.koalaphils.vendor"="Koala Technologies"
+FROM php:8-fpm
+LABEL description="PHP base image with commonly used extensions pre-installed" \
+     "com.koalaphils.vendor"="Koala Software Technology Innovations" \
+     "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
 RUN set -eux; \
   apt-get update \
