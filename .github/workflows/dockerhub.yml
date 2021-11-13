@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI to Docker Hub
+name: Build and Push to Registry
 
 # Controls when the action will run.
 on:
@@ -18,6 +18,8 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 720
+    permissions:
+      packages: write
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -28,6 +30,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -44,7 +52,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:8-fpm
+          tags: |
+            ${{ github.repository_owner }}/php:8-fpm
+            ghcr.io/${{ github.repository_owner }}/php:8-fpm
       - name: PHP 8 Apache
         uses: docker/build-push-action@v2
         with:
@@ -55,18 +65,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:8-apache
-#      - name: PHP 8 ZTS
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./
-#          file: ./Dockerfile-8-zts
-#          builder: ${{ steps.buildx.outputs.name }}
-#          platforms: linux/amd64,linux/arm64/v8
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-#          push: true
-#          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:8-zts
+          tags: |
+            ${{ github.repository_owner }}/php:8-apache
+            ghcr.io/${{ github.repository_owner }}/php:8-apache
       - name: PHP 8 CLI
         uses: docker/build-push-action@v2
         with:
@@ -77,55 +78,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:8-cli
-
-#  php-8-buster:
-#    # The type of runner that the job will run on
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 720
-#    # Steps represent a sequence of tasks that will be executed as part of the job
-#    steps:
-#      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-#      - name: Checkout Repo
-#        uses: actions/checkout@v2
-#      - name: Login to Dockerhub
-#        uses: docker/login-action@v1
-#        with:
-#          username: ${{ secrets.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v1
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#      - name: PHP 8 FPM Buster
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./
-#          file: ./Dockerfile-8-fpm
-#          builder: ${{ steps.buildx.outputs.name }}
-#          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-#          push: true
-#          build-args: OS=buster
-#          tags: koalaphils/php:8-fpm-buster
-#      - name: PHP 8 Apache Buster
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./
-#          file: ./Dockerfile-8-apache
-#          builder: ${{ steps.buildx.outputs.name }}
-#          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-#          push: true
-#          build-args: OS=buster
-#          tags: koalaphils/php:8-apache-buster
-
+          tags: |
+            ${{ github.repository_owner }}/php:8-cli
+            ghcr.io/${{ github.repository_owner }}/php:8-cli
   php-74:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 720
+    permissions:
+      packages: write
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -136,6 +97,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -150,7 +117,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:7.4-fpm
+          tags: |
+            ${{ github.repository_owner }}/php:7.4-fpm
+            ghcr.io/${{ github.repository_owner }}/php:7.4-fpm
       - name: PHP 7.4 Apache
         uses: docker/build-push-action@v2
         with:
@@ -161,55 +130,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:7.4-apache
-
-#  php-74-buster:
-#    # The type of runner that the job will run on
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 720
-#    # Steps represent a sequence of tasks that will be executed as part of the job
-#    steps:
-#      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-#      - name: Checkout Repo
-#        uses: actions/checkout@v2
-#      - name: Login to Dockerhub
-#        uses: docker/login-action@v1
-#        with:
-#          username: ${{ secrets.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v1
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#      - name: PHP 7.4 FPM Buster
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./
-#          file: ./Dockerfile-7.4-fpm
-#          builder: ${{ steps.buildx.outputs.name }}
-#          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-#          push: true
-#          build-args: OS=buster
-#          tags: koalaphils/php:7.4-fpm-buster
-#      - name: PHP 7.4 Apache Buster
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./
-#          file: ./Dockerfile-7.4-apache
-#          builder: ${{ steps.buildx.outputs.name }}
-#          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-#          push: true
-#          build-args: OS=buster
-#          tags: koalaphils/php:7.4-apache-buster
-
+          tags: |
+            ${{ github.repository_owner }}/php:7.4-apache
+            ghcr.io/${{ github.repository_owner }}/php:7.4-apache
   php-73:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 720
+    permissions:
+      packages: write
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -220,6 +149,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -234,35 +169,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
-          tags: ${{ secrets.DOCKERHUB_ACCOUNT }}/php:7.3-fpm
-
-#  php-73-buster:
-#    # The type of runner that the job will run on
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 720
-#    # Steps represent a sequence of tasks that will be executed as part of the job
-#    steps:
-#      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-#      - name: Checkout Repo
-#        uses: actions/checkout@v2
-#      - name: Login to Dockerhub
-#        uses: docker/login-action@v1
-#        with:
-#          username: ${{ secrets.DOCKERHUB_USERNAME }}
-#          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
-#      - name: Set up QEMU
-#        uses: docker/setup-qemu-action@v1
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#      - name: PHP 7.3 FPM Buster
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: ./
-#          file: ./Dockerfile-7.3-fpm
-#          builder: ${{ steps.buildx.outputs.name }}
-#          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-#          push: true
-#          build-args: OS=buster
-#          tags: koalaphils/php:7.3-fpm-buster
+          tags: |
+            ${{ github.repository_owner }}/php:7.3-fpm
+            ghcr.io/${{ github.repository_owner }}/php:7.3-fpm
