@@ -61,7 +61,7 @@ RUN set -eux; \
     ; \
   export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
     ; \
-  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype \
+  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype --with-avif \
     ; \
   docker-php-ext-install -j$(nproc) \
     gd \
