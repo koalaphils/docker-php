@@ -1,0 +1,153 @@
+FROM php:8.1.0RC6-fpm
+LABEL description="PHP base image with commonly used extensions pre-installed" \
+     "com.koalaphils.vendor"="Koala Software Technology Innovations" \
+     "com.koalaphils.image.author"="mdprotacio@outlook.com"
+
+RUN set -eux; \
+  apt-get update \
+  && LIBAVIF=`apt-cache pkgnames libavif | head -1` \
+  && LIBMPDEC=`apt-cache pkgnames libmpdec | head -1` \
+  && apt-get install --no-install-recommends -y \
+    ca-certificates \
+    curl \
+    git \
+    imagemagick \
+    ${LIBAVIF} \
+    libcmph0 \
+    libedit2 \
+    libhashkit2 \
+    libjpeg62-turbo \
+    libmemcached11 \
+    libmemcachedutil2 \
+    ${LIBMPDEC} \
+    libmsgpackc2 \
+    libpng16-16 \
+    libsodium23 \
+    libxpm4 \
+    libzip4 \
+    netcat \
+    tzdata \
+    unzip \
+  ; \
+  apt-mark manual '.*' > /dev/null; \
+  savedAptMark="$(apt-mark showmanual)"; \
+  apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS \
+    gettext-base \
+    libargon2-dev \
+    libavif-dev \
+    libcmph-dev \
+    libcurl4-openssl-dev \
+    libedit-dev \
+    libicu-dev \
+    libjpeg-dev \
+    libjpeg62-turbo-dev \
+    libmagick++-dev \
+    libmagickwand-dev \
+    libmemcached-dev \
+    libmpdec-dev \
+    libmsgpack-dev \
+    libpng-dev \
+    libpng++-dev \
+    libsodium-dev \
+    libssl-dev \
+    libwebp-dev \
+    libxml2-dev \
+    libxpm-dev \
+    libzip-dev \
+    libbz2-dev \
+    zlib1g-dev \
+    ${PHP_EXTRA_BUILD_DEPS:-} \
+    ; \
+  export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
+    ; \
+  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype \
+    ; \
+  docker-php-ext-install -j$(nproc) \
+    gd \
+    gettext \
+    intl \
+    opcache \
+    pcntl \
+    sockets \
+    ; \
+  pecl update-channels \
+    ; \
+  pecl install --onlyreqdeps --nobuild decimal; \
+    cd "$(pecl config-get temp_dir)/decimal"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild igbinary; \
+    cd "$(pecl config-get temp_dir)/igbinary"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild msgpack; \
+    cd "$(pecl config-get temp_dir)/msgpack"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild apcu; \
+    cd "$(pecl config-get temp_dir)/apcu"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild imagick; \
+    cd "$(pecl config-get temp_dir)/imagick"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild redis; \
+    cd "$(pecl config-get temp_dir)/redis"; \
+    phpize; \
+    ./configure --enable-redis-igbinary --enable-redis-json --enable-redis-msgpack; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild memcached; \
+    cd "$(pecl config-get temp_dir)/memcached"; \
+    phpize; \
+    ./configure --enable-memcached-igbinary --enable-memcached-json --enable-memcached-session --enable-memcached-sasl --enable-memcached-msgpack; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild xdebug; \
+    cd "$(pecl config-get temp_dir)/xdebug"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild ev; \
+    cd "$(pecl config-get temp_dir)/ev"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
+  docker-php-ext-enable \
+    apcu \
+    ev \
+    ; \
+  cp /usr/bin/envsubst /usr/local/bin/envsubst; \
+  apt-mark auto '.*' > /dev/null; \
+  [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+  apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImport=false; \
+  rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
+  php --version \
+  ; mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
+  ; sed -i "s|^expose_php\s*=\s*\(.*\)|expose_php=Off|g" $PHP_INI_DIR/php.ini \
+  ; sed -i "s|^\(;\)*realpath_cache_size\s*=\s*\(.*\)|realpath_cache_size=\2|g" $PHP_INI_DIR/php.ini \
+  ; sed -i "s|^\(;\)*realpath_cache_ttl\s*=\s*\(.*\)|realpath_cache_ttl=3600|g" $PHP_INI_DIR/php.ini \
+  ; sed -i "s|^\(;\)*zlib.output_compression\s*=\s*\(.*\)|zlib.output_compression=On|g" $PHP_INI_DIR/php.ini \
+  ; sed -i "s/;emergency_restart_threshold\s*=\s*.*/emergency_restart_threshold = 10/g" $PHP_INI_DIR/../php-fpm.conf \
+  ; sed -i "s/;emergency_restart_interval\s*=\s*.*/emergency_restart_interval = 1m/g" $PHP_INI_DIR/../php-fpm.conf \
+  ; sed -i "s/;process_control_timeout\s*=\s*.*/process_control_timeout = 10s/g" $PHP_INI_DIR/../php-fpm.conf \
+  ;
+
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+
+WORKDIR /var/www/html
+CMD ["php-fpm"]

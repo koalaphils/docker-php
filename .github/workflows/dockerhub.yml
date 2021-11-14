@@ -14,12 +14,14 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  php-8:
+  php-81:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 720
     permissions:
       packages: write
+    env:
+      version: 8.1
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -42,51 +44,122 @@ jobs:
           platforms: all
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: PHP 8 FPM
+      - name: PHP ${{ env.version }} FPM
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-8-fpm
+          file: ./Dockerfile-${{ env.version }}-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:8-fpm
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:8-fpm
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-            ${{ github.repository_owner }}/php:8-fpm
-            ghcr.io/${{ github.repository_owner }}/php:8-fpm
-      - name: PHP 8 Apache
+            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
+      - name: PHP ${{ env.version }} Apache
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-8-apache
+          file: ./Dockerfile-${{ env.version }}-apache
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:8-apache
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:8-apache
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
           push: true
           tags: |
-            ${{ github.repository_owner }}/php:8-apache
-            ghcr.io/${{ github.repository_owner }}/php:8-apache
-      - name: PHP 8 CLI
+            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
+      - name: PHP ${{ env.version }} CLI
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-8-cli
+          file: ./Dockerfile-${{ env.version }}-cli
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:8-cli
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:8-cli
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
           push: true
           tags: |
-            ${{ github.repository_owner }}/php:8-cli
-            ghcr.io/${{ github.repository_owner }}/php:8-cli
+            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
+  php-80:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    timeout-minutes: 720
+    permissions:
+      packages: write
+    env:
+      version: 8
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Login to Dockerhub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: PHP ${{ env.version }} FPM
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile-${{ env.version }}-fpm
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
+          push: true
+          tags: |
+            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
+      - name: PHP ${{ env.version }} Apache
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile-${{ env.version }}-apache
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
+          push: true
+          tags: |
+            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
+      - name: PHP ${{ env.version }} CLI
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile-${{ env.version }}-cli
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          push: true
+          tags: |
+            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
   php-74:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 720
     permissions:
       packages: write
+    env:
+      version: 7.4
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -107,38 +180,40 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: PHP 7.4 FPM
+      - name: PHP ${{ env.version }} FPM
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-7.4-fpm
+          file: ./Dockerfile-${{ env.version }}-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:7.4-fpm
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:7.4-fpm
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-            ${{ github.repository_owner }}/php:7.4-fpm
-            ghcr.io/${{ github.repository_owner }}/php:7.4-fpm
-      - name: PHP 7.4 Apache
+            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
+      - name: PHP ${{ env.version }} Apache
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-7.4-apache
+          file: ./Dockerfile-${{ env.version }}-apache
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:7.4-apache
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:7.4-apache
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
           push: true
           tags: |
-            ${{ github.repository_owner }}/php:7.4-apache
-            ghcr.io/${{ github.repository_owner }}/php:7.4-apache
+            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
   php-73:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 720
     permissions:
       packages: write
+    env:
+      version: 7.3
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -159,16 +234,16 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: PHP 7.3 FPM
+      - name: PHP ${{ env.version }} FPM
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-7.3-fpm
+          file: ./Dockerfile-${{ env.version }}-fpm
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:7.3-fpm
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:7.3-fpm
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-            ${{ github.repository_owner }}/php:7.3-fpm
-            ghcr.io/${{ github.repository_owner }}/php:7.3-fpm
+            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
