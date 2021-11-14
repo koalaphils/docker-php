@@ -1,5 +1,5 @@
 FROM php:7.4-fpm
-LABEL description="PHP base image with commonly used extensions pre-installed" \
+LABEL org.opencontainers.image.description="PHP base image with commonly used extensions pre-installed" \
      "com.koalaphils.vendor"="Koala Software Technology Innovations" \
      "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
