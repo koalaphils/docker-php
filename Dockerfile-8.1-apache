@@ -122,6 +122,12 @@ RUN set -eux; \
     ./configure; \
     make && make install; \
     cd -; \
+  pecl install --onlyreqdeps --nobuild xhprof; \
+    cd "$(pecl config-get temp_dir)/xhprof/extension"; \
+    phpize; \
+    ./configure; \
+    make && make install; \
+    cd -; \
   pecl install --onlyreqdeps --nobuild ev; \
     cd "$(pecl config-get temp_dir)/ev"; \
     phpize; \
