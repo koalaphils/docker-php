@@ -28,9 +28,8 @@ RUN set -eux; \
     netcat \
     tzdata \
     unzip \
-  ;
-
-RUN apt-mark manual '.*' > /dev/null; \
+  ; \
+  apt-mark manual '.*' > /dev/null; \
   savedAptMark="$(apt-mark showmanual)"; \
   apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
@@ -60,10 +59,7 @@ RUN apt-mark manual '.*' > /dev/null; \
     zlib1g-dev \
     ${PHP_EXTRA_BUILD_DEPS:-} \
     ; \
-  apt-mark auto '.*' > /dev/null; \
-  [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark;
-
-RUN export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
+  export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
     ; \
   docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype \
     ; \
@@ -136,13 +132,12 @@ RUN export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" 
     ev \
     ; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
+  apt-mark auto '.*' > /dev/null; \
+  [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
   apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImport=false; \
   rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
   php --version \
-  ;
-
-#Security changes
-RUN mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
+  ; mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
   ; sed -i "s|^expose_php\s*=\s*\(.*\)|expose_php=Off|g" $PHP_INI_DIR/php.ini \
   ; sed -i "s|^\(;\)*realpath_cache_size\s*=\s*\(.*\)|realpath_cache_size=\2|g" $PHP_INI_DIR/php.ini \
   ; sed -i "s|^\(;\)*realpath_cache_ttl\s*=\s*\(.*\)|realpath_cache_ttl=3600|g" $PHP_INI_DIR/php.ini \
