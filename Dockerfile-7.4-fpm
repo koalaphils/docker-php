@@ -65,6 +65,7 @@ RUN set -eux; \
     opcache \
     pcntl \
     sockets \
+    zip \
     ; \
   pecl update-channels \
     ; \
