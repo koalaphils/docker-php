@@ -48,7 +48,7 @@ jobs:
           context: ./
           file: ./Dockerfile-fpm
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -63,7 +63,7 @@ jobs:
           context: ./
           file: ./Dockerfile-apache
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -78,7 +78,7 @@ jobs:
           context: ./
           file: ./Dockerfile-cli
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
@@ -121,7 +121,7 @@ jobs:
           context: ./
           file: ./Dockerfile-fpm
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -136,7 +136,7 @@ jobs:
           context: ./
           file: ./Dockerfile-apache
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -151,7 +151,7 @@ jobs:
           context: ./
           file: ./Dockerfile-cli
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
@@ -194,7 +194,7 @@ jobs:
           context: ./
           file: ./Dockerfile-fpm
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -209,7 +209,7 @@ jobs:
           context: ./
           file: ./Dockerfile-apache
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -224,7 +224,7 @@ jobs:
           context: ./
           file: ./Dockerfile-cli
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
@@ -267,7 +267,7 @@ jobs:
           context: ./
           file: ./Dockerfile-fpm
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -282,7 +282,7 @@ jobs:
           context: ./
           file: ./Dockerfile-apache
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -297,7 +297,7 @@ jobs:
           context: ./
           file: ./Dockerfile-cli
           build-args: |
-            PHP_VERSION=${{ env.PHP_VERSION }}
+            PHP_VERSION=${{ env.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
