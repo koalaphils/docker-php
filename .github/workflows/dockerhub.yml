@@ -21,7 +21,7 @@ jobs:
     permissions:
       packages: write
     env:
-      version: 8.1
+      version: 8.1.0RC6
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -40,15 +40,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: PHP ${{ env.version }} FPM
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-fpm
+          file: ./Dockerfile-fpm
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -61,7 +61,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-apache
+          file: ./Dockerfile-apache
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -74,7 +76,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-cli
+          file: ./Dockerfile-cli
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
@@ -109,15 +113,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: PHP ${{ env.version }} FPM
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-fpm
+          file: ./Dockerfile-fpm
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -130,7 +134,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-apache
+          file: ./Dockerfile-apache
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -143,7 +149,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-cli
+          file: ./Dockerfile-cli
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
@@ -184,7 +192,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-fpm
+          file: ./Dockerfile-fpm
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -197,7 +207,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-apache
+          file: ./Dockerfile-apache
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
@@ -206,6 +218,21 @@ jobs:
           tags: |
             ${{ github.repository_owner }}/php:${{ env.version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
+      - name: PHP ${{ env.version }} CLI
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile-cli
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          push: true
+          tags: |
+            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
   php-73:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -238,7 +265,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile-${{ env.version }}-fpm
+          file: ./Dockerfile-fpm
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
@@ -247,3 +276,33 @@ jobs:
           tags: |
             ${{ github.repository_owner }}/php:${{ env.version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
+      - name: PHP ${{ env.version }} Apache
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile-apache
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
+          push: true
+          tags: |
+            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
+      - name: PHP ${{ env.version }} CLI
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile-cli
+          build-args: |
+            PHP_VERSION=${{ env.PHP_VERSION }}
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
+          push: true
+          tags: |
+            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+            ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli

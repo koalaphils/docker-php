@@ -1,4 +1,5 @@
-FROM php:8.1.0RC6-apache
+ARG PHP_VERSION=8
+FROM php:${PHP_VERSION}-fpm
 LABEL org.opencontainers.image.description="PHP base image with commonly used extensions pre-installed" \
      "com.koalaphils.vendor"="Koala Software Technology Innovations" \
      "com.koalaphils.image.author"="mdprotacio@outlook.com"
@@ -61,7 +62,10 @@ RUN set -eux; \
     ; \
   export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
     ; \
-  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype --with-avif \
+  $(dpkg --compare-versions ${PHP_VERSION} ge 8.1) \
+  ; if [ "$?" -eq "0" ]; then WITH_AVIF=--with-avif; else WITH_AVIF=; fi \
+    ; \
+  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype ${WITH_AVIF} \
     ; \
   docker-php-ext-install -j$(nproc) \
     gd \
@@ -144,25 +148,17 @@ RUN set -eux; \
   apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImport=false; \
   rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
   php --version \
-  ; \
-  a2enmod \
-    buffer \
-    expires \
-    headers \
-    mime_magic \
-    remoteip \
-    rewrite \
   ; mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
   ; sed -i "s|^expose_php\s*=\s*\(.*\)|expose_php=Off|g" $PHP_INI_DIR/php.ini \
   ; sed -i "s|^\(;\)*realpath_cache_size\s*=\s*\(.*\)|realpath_cache_size=\2|g" $PHP_INI_DIR/php.ini \
   ; sed -i "s|^\(;\)*realpath_cache_ttl\s*=\s*\(.*\)|realpath_cache_ttl=3600|g" $PHP_INI_DIR/php.ini \
   ; sed -i "s|^\(;\)*zlib.output_compression\s*=\s*\(.*\)|zlib.output_compression=On|g" $PHP_INI_DIR/php.ini \
-  ; sed -i "s|^ServerSignature\(.*\)|ServerSignature Off|g" $APACHE_CONFDIR/conf-enabled/security.conf \
-  ; sed -i "s|^ServerTokens\(.*\)|ServerTokens Prod|g" $APACHE_CONFDIR/conf-enabled/security.conf \
-  ; echo "LogFormat \"\\\"%{X-Forwarded-For}i %h\\\" %l %u %t \\\"%r\\\" %>s %O \\\"%{Referer}i\\\" \\\"%{User-Agent}i\\\"\" combined" > $APACHE_CONFDIR/conf-available/log_combined.conf \
-  ; a2enconf log_combined \
+  ; sed -i "s/;emergency_restart_threshold\s*=\s*.*/emergency_restart_threshold = 10/g" $PHP_INI_DIR/../php-fpm.conf \
+  ; sed -i "s/;emergency_restart_interval\s*=\s*.*/emergency_restart_interval = 1m/g" $PHP_INI_DIR/../php-fpm.conf \
+  ; sed -i "s/;process_control_timeout\s*=\s*.*/process_control_timeout = 10s/g" $PHP_INI_DIR/../php-fpm.conf \
   ;
 
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /var/www/html
+CMD ["php-fpm"]
