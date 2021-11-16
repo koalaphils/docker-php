@@ -56,10 +56,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
       - name: PHP ${{ env.version }} Apache
         uses: docker/build-push-action@v2
         with:
@@ -73,10 +73,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
       - name: PHP ${{ env.version }} CLI
         uses: docker/build-push-action@v2
         with:
@@ -90,10 +90,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
   php-80:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -136,10 +136,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
       - name: PHP ${{ env.version }} Apache
         uses: docker/build-push-action@v2
         with:
@@ -153,10 +153,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
       - name: PHP ${{ env.version }} CLI
         uses: docker/build-push-action@v2
         with:
@@ -170,10 +170,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
   php-74:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -216,10 +216,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-fpm
       - name: PHP ${{ env.version }} Apache
         uses: docker/build-push-action@v2
         with:
@@ -233,10 +233,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-apache
       - name: PHP ${{ env.version }} CLI
         uses: docker/build-push-action@v2
         with:
@@ -250,10 +250,10 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
-#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.alternate_version }}-cli
   php-73:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -295,8 +295,8 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-fpm
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-fpm
+#            ${{ github.repository_owner }}/php:${{ env.version }}-fpm
       - name: PHP ${{ env.version }} Apache
         uses: docker/build-push-action@v2
         with:
@@ -310,8 +310,8 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-apache
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-apache
+#            ${{ github.repository_owner }}/php:${{ env.version }}-apache
       - name: PHP ${{ env.version }} CLI
         uses: docker/build-push-action@v2
         with:
@@ -325,5 +325,5 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ env.version }}-cli
           push: true
           tags: |
-#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
             ghcr.io/${{ github.repository_owner }}/php:${{ env.version }}-cli
+#            ${{ github.repository_owner }}/php:${{ env.version }}-cli
