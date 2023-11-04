@@ -21,10 +21,10 @@ jobs:
       date: ${{ steps.date.outputs.date }}
     steps:
       - uses: actions/checkout@v3
-      - uses: benjlevesque/short-sha@v2.1
+      - uses: benjlevesque/short-sha@v2.2
         id: short-sha
         with:
-          lenght: 6
+          length: 6
       - name: Get current date
         id: date
         run: echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
