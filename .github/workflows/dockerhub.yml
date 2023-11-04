@@ -14,7 +14,19 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  build-version:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.short-sha.outputs.sha }}
+      date: ${{ steps.date.outputs.date }}
+    steps:
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+      - name: Get current date
+        id: date
+        run: echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
   php-82:
+    needs: build-version
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
@@ -33,4 +45,8 @@ jobs:
         ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
         ghcr.io/${{ github.repository_owner }}/php:${{ matrix.variant }}
         ${{ github.repository_owner }}/php:${{ matrix.variant }}
-
+    secrets:
+      dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub-token: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      github-owner: ${{ github.repository_owner }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
