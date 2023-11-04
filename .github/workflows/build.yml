@@ -6,6 +6,9 @@ on:
       version:
         required: true
         type: string
+      variant:
+        required: true
+        type: string
       tags:
         required: true
         type: string
@@ -50,7 +53,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: PHP ${{ inputs.version }} FPM
+      - name: PHP ${{ inputs.version }} ${{ inputs.variant }}
         uses: docker/build-push-action@v5
         with:
           context: ./

@@ -18,19 +18,20 @@ jobs:
   php-82:
     strategy:
       matrix:
-        target: [fpm, cli, apache, zts]
+        variant: [fpm, cli, apache, zts]
         version: ['8.2', '8']
     uses: ./.github/workflows/build.yml
     with:
-      version: ${{ env.version }}
-      dockerfile: ./Dockerfile-${{ matrix.target }}
+      version: ${{ matrix.version }}
+      variant: ${{ matrix.variant }}
+      dockerfile: ./Dockerfile-${{ matrix.variant }}
       tags: |
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.target }}-${{ needs.build-versions.outputs.date }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.target }}-${{ needs.build-versions.outputs.date }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.target}}-${{ needs.build-versions.outputs.sha }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.target }}-${{ needs.build-versions.outputs.sha }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.target }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.target }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.target }}
-        ${{ github.repository_owner }}/php:${{ matrix.target }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
+        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant}}-${{ needs.build-versions.outputs.sha }}
+        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.sha }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
+        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.variant }}
+        ${{ github.repository_owner }}/php:${{ matrix.variant }}
 
