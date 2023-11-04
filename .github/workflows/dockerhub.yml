@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
-        version: ['latest']
+        version: ['8']
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ matrix.version }}
