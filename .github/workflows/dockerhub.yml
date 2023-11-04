@@ -22,7 +22,7 @@ jobs:
     env:
       version: '8.2'
       alternate_version: '8'
-    uses: ./build.yml@build-image
+    uses: ./github/workflows/build.yml@build-image
     with:
       version: ${{ env.version }}
       dockerfile: ./Dockerfile-${{ matrix.target }}
