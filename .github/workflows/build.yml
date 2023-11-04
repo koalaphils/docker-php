@@ -12,18 +12,6 @@ on:
       tags:
         required: true
         type: string
-      dockerfile:
-        required: true
-        type: string
-    secrets:
-      dockerhub-username:
-        required: true
-      dockerhub-token:
-        required: true
-      github-owner:
-        required: true
-      github-token:
-        required: true
 
 
 jobs:
@@ -43,25 +31,25 @@ jobs:
       - name: Login to Dockerhub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.dockerhub-username }}
-          password: ${{ secrets.dockerhub-token }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.github-owner }}
-          password: ${{ secrets.github-token }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }}
         uses: docker/build-push-action@v5
         with:
           context: ./
-          file: ${{ inputs.dockerfile }}
+          file: ./Dockerfile-${{ inputs.variant }}
           build-args: |
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64/v8
-          cache-from: type=registry,ref=ghcr.io/${{ secrets.github-owner }}/cache/php:${{ inputs.version }}-${{ inputs.variant }}
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ secrets.github-owner }}/cache/php:${{ inputs.version }}-${{ inputs.variant }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ inputs.version }}-${{ inputs.variant }}
+          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository_owner }}/cache/php:${{ inputs.version }}-${{ inputs.variant }}
           push: true
           tags: |
             ${{ inputs.tags }}
