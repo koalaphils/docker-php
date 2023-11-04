@@ -73,9 +73,5 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ secrets.github-owner }}/cache/php:${{ inputs.version }}-${{ inputs.variant }}
           push: true
           tags: |
-            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}-${{ needs.build-versions.outputs.date }}
-            ${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}-${{ needs.build-versions.outputs.date }}
-            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant}}-${{ needs.build-versions.outputs.sha }}
-            ${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}-${{ needs.build-versions.outputs.sha }}
-            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}
-            ${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}
+            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.variant }}
+            ${{ secrets.github-owner }}/php:${{ inputs.variant }}
