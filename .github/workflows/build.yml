@@ -9,9 +9,6 @@ on:
       variant:
         required: true
         type: string
-      tags:
-        required: true
-        type: string
       dockerfile:
         required: true
         type: string
@@ -27,7 +24,20 @@ on:
 
 
 jobs:
+  build-version:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.short-sha.outputs.sha }}
+      date: ${{ steps.date.outputs.date }}
+    steps:
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+      - name: Get current date
+        id: date
+        run: echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
+
   build-image:
+    needs: build-version
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
@@ -64,4 +74,9 @@ jobs:
           cache-to: type=registry,mode=max,ref=ghcr.io/${{ secrets.github-owner }}/cache/php:${{ inputs.version }}-${{ inputs.variant }}
           push: true
           tags: |
-            ${{ inputs.tags }}
+            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}-${{ needs.build-versions.outputs.date }}
+            ${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}-${{ needs.build-versions.outputs.date }}
+            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant}}-${{ needs.build-versions.outputs.sha }}
+            ${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}-${{ needs.build-versions.outputs.sha }}
+            ghcr.io/${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}
+            ${{ secrets.github-owner }}/php:${{ inputs.version }}-${{ inputs.variant }}
