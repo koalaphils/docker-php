@@ -27,7 +27,7 @@ jobs:
         run: echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
     # This workflow contains a single job called "build"
   php-82:
-    needs: build-versions
+    needs: build-version
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
