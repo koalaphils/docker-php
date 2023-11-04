@@ -51,7 +51,7 @@ jobs:
           registry: ghcr.io
           username: ${{ secrets.github-owner }}
           password: ${{ secrets.github-token }}
-      - name: PHP ${{ inputs.version }} ${{ inputs.variant }}
+      - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }}
         uses: docker/build-push-action@v5
         with:
           context: ./

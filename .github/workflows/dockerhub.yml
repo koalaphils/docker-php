@@ -34,7 +34,8 @@ jobs:
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
-        version: ['8']
+        version: ['8.2']
+        latest: ['8']
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ matrix.version }}
@@ -43,6 +44,18 @@ jobs:
       tags: |
         ghcr.io/${{ github.repository_owner }}/php:${{ matrix.variant }}
         ${{ github.repository_owner }}/php:${{ matrix.variant }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
+        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant}}-${{ needs.build-versions.outputs.sha }}
+        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.sha }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
+        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.latest }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
+        ${{ github.repository_owner }}/php:${{ matrix.latest }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.latest }}-${{ matrix.variant}}-${{ needs.build-versions.outputs.sha }}
+        ${{ github.repository_owner }}/php:${{ matrix.latest }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.sha }}
+        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.latest }}-${{ matrix.variant }}
+        ${{ github.repository_owner }}/php:${{ matrix.latest }}-${{ matrix.variant }}
     secrets:
       dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub-token: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
@@ -54,7 +67,7 @@ jobs:
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
-        version: ['8.2', '8', '8.1', '8.0']
+        version: ['8.1', '8.0']
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ matrix.version }}
