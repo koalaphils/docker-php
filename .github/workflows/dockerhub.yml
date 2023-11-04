@@ -15,7 +15,6 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   php-latest:
-    needs: build-version
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
@@ -32,7 +31,6 @@ jobs:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
   php-debian:
-    needs: build-version
     strategy:
       matrix:
         variant: [fpm, cli, apache, zts]
@@ -49,7 +47,6 @@ jobs:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
   php-alpine:
-    needs: build-version
     strategy:
       matrix:
         variant: [fpm-alpine, cli-alpine, zts-alpine]
