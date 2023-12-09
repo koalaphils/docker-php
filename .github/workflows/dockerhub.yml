@@ -18,6 +18,10 @@ jobs:
     strategy:
       max-parallel: 10
       matrix:
+        version:
+          - '8.1'
+          - '8.2'
+          - '8.3'
         variant:
           - apache
           - cli
@@ -26,10 +30,6 @@ jobs:
           - fpm-alpine
           - zts
           - zts-alpine
-        version:
-          - '8.3'
-          - '8.2'
-          - '8.1'
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
