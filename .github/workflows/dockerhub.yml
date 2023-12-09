@@ -14,60 +14,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  create-version-id:
-    runs-on: ubuntu-latest
-    outputs:
-      sha: ${{ steps.short-sha.outputs.sha }}
-      date: ${{ steps.date.outputs.date }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: benjlevesque/short-sha@v2.2
-        id: short-sha
-        with:
-          length: 6
-      - name: Get current date
-        id: date
-        run: echo "date=$(date -u +'%Y%m%d')" >> $GITHUB_OUTPUT
-
-  tag-latest:
-    needs: [create-version-id, build-versions]
-    strategy:
-      matrix:
-        variant:
-          - apache
-          - cli
-          - cli-alpine
-          - fpm
-          - fpm-alpine
-          - zts
-          - zts-alpine
-        version:
-          - '8.3'
-        alias:
-          - '8'
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      version: ${{ matrix.version }}
-      variant: ${{ matrix.variant }}
-      tags: |
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant}}-${{ needs.build-versions.outputs.sha }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.sha }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.alias }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
-        ${{ github.repository_owner }}/php:${{ matrix.alias }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.alias }}-${{ matrix.variant}}-${{ needs.build-versions.outputs.sha }}
-        ${{ github.repository_owner }}/php:${{ matrix.alias }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.sha }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.alias }}-${{ matrix.variant }}
-        ${{ github.repository_owner }}/php:${{ matrix.alias }}-${{ matrix.variant }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.variant }}
-        ${{ github.repository_owner }}/php:${{ matrix.variant }}
-
   build-versions:
-    needs: create-version-id
     strategy:
       max-parallel: 10
       matrix:
@@ -88,17 +35,11 @@ jobs:
     with:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
-      tags: |
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.date }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant}}-${{ needs.build-versions.outputs.sha }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}-${{ needs.build-versions.outputs.sha }}
-        ghcr.io/${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
-        ${{ github.repository_owner }}/php:${{ matrix.version }}-${{ matrix.variant }}
+      latest: '8.3'
 
   clear-cache:
     runs-on: ubuntu-latest
-    needs: ['tag-latest']
+    needs: ['build-versions']
     steps:
       - name: Clear cache
         uses: actions/github-script@v7
