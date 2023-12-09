@@ -36,8 +36,8 @@ jobs:
             type=raw,value=
             type=sha,format=short
             type=schedule,pattern={{date 'YYYYMMDD'}}
-            type=raw,prefix=8-${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
-            type=raw,prefix=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
+            type=raw,prefix=8-${{ inputs.variant }},value=,enable=${{ inputs.version == inputs.latest }}
+            type=raw,prefix=${{ inputs.variant }},value=,enable=${{ inputs.version == inputs.latest }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
