@@ -32,8 +32,8 @@ jobs:
             ${{ github.repository_owner }}/php
           tags: |
             type=raw,prefix=${{ inputs.version }}-${{ inputs.variant }},value=
-            type=sha,prefix=${{ inputs.version }}-${{ inputs.variant }},format=short
-            type=schedule,prefix=${{ inputs.version }}-${{ inputs.variant }},pattern={{date 'YYYYMMDD'}}
+            type=sha,prefix=${{ inputs.version }}-${{ inputs.variant }}-,format=short
+            type=schedule,prefix=${{ inputs.version }}-${{ inputs.variant }}-,pattern={{date 'YYYYMMDD'}}
             type=raw,prefix=8-${{ inputs.variant }},value=,enable=${{ inputs.version == inputs.latest }}
             type=raw,prefix=${{ inputs.variant }},value=,enable=${{ inputs.version == inputs.latest }}
       - name: Set up QEMU
