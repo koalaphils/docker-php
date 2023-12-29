@@ -11,7 +11,8 @@ RUN set -eux; \
     c-ares \
     freetype \
     git \
-    imagemagick \
+    imagemagick-libs \
+    libavif \
     libcmph \
     libedit \
     libevent \
@@ -42,6 +43,7 @@ RUN set -eux; \
     icu-dev \
     imagemagick-dev \
     jpeg-dev \
+    libavif-dev \
     libedit-dev \
     libevent-dev \
     libjpeg-turbo-dev \
@@ -63,7 +65,7 @@ RUN set -eux; \
     ${PHP_EXTRA_BUILD_DEPS:-} \
   ; export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
   ; \
-  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype \
+  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype --with-avif \
     ; \
   docker-php-ext-install -j$(nproc) gd \
     ; \
