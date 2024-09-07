@@ -31,6 +31,7 @@ RUN set -eux; \
     libpcre3 \
     libpng16-16 \
     libsodium23 \
+    libuv1 \
     libxpm4 \
     libzip4 \
     netcat-traditional \
@@ -69,6 +70,7 @@ RUN set -eux; \
     libpng++-dev \
     libsodium-dev \
     libssl-dev \
+    libuv1-dev \
     libwebp-dev \
     libxml2-dev \
     libxpm-dev \
@@ -195,6 +197,12 @@ RUN set -eux; \
     cd -; \
   pecl install --onlyreqdeps --nobuild swoole; \
     cd "$(pecl config-get temp_dir)/swoole"; \
+    phpize; \
+    ./configure; \
+    make && make test && make install || exit 1; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild uv-beta; \
+    cd "$(pecl config-get temp_dir)/uv"; \
     phpize; \
     ./configure; \
     make && make test && make install || exit 1; \

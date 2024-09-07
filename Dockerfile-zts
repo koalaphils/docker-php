@@ -31,6 +31,7 @@ RUN set -eux; \
     libpng16-16 \
     libpcre3 \
     libsodium23 \
+    libuv1 \
     libxpm4 \
     libzip4 \
     netcat-traditional \
@@ -69,6 +70,7 @@ RUN set -eux; \
     libpng++-dev \
     libsodium-dev \
     libssl-dev \
+    libuv1-dev \
     libwebp-dev \
     libxml2-dev \
     libxpm-dev \
@@ -199,6 +201,12 @@ RUN set -eux; \
 #    ./configure; \
 #    make && make test && make install || exit 1; \
 #    cd -; \
+  pecl install --onlyreqdeps --nobuild uv-beta; \
+    cd "$(pecl config-get temp_dir)/uv"; \
+    phpize; \
+    ./configure; \
+    make && make test && make install || exit 1; \
+    cd -; \
   docker-php-ext-enable --ini-name 0-docker-php-ext-igbinary.ini igbinary; \
   docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \

@@ -22,6 +22,7 @@ RUN set -eux; \
     libmemcached-libs \
     libpng \
     libsodium \
+    libuv \
     libxpm \
     libzip \
     lz4-libs \
@@ -54,6 +55,7 @@ RUN set -eux; \
     linux-headers \
     libpng-dev \
     libsodium-dev \
+    libuv-dev \
     libwebp-dev \
     libxml2-dev \
     libxpm-dev \
@@ -184,6 +186,12 @@ RUN set -eux; \
     cd -; \
   pecl install --onlyreqdeps --nobuild swoole; \
     cd "$(pecl config-get temp_dir)/swoole"; \
+    phpize; \
+    ./configure; \
+    make && make test && make install || exit 1; \
+    cd -; \
+  pecl install --onlyreqdeps --nobuild uv-beta; \
+    cd "$(pecl config-get temp_dir)/uv"; \
     phpize; \
     ./configure; \
     make && make test && make install || exit 1; \
