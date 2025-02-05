@@ -16,12 +16,13 @@ on:
 jobs:
   build-versions:
     strategy:
-      max-parallel: 10
+      max-parallel: 7
       matrix:
         version:
           - '8.4'
           - '8.3'
           - '8.2'
+          - '8.1'
         variant:
           - cli-alpine
           - fpm-alpine
