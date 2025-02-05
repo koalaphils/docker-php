@@ -5,7 +5,10 @@ LABEL org.opencontainers.image.description="PHP base image with commonly used ex
      "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
 RUN set -eux; \
-  apt-get update \
+  echo "Acquire::http::Pipeline-Depth 0; \
+         Acquire::http::No-Cache true; \
+         Acquire::BrokenProxy    true;" > /etc/apt/apt.conf.d/99fixbadproxy \
+  && apt-get update \
   && LIBAVIF=`apt-cache pkgnames libavif | sort -V | head -1` \
   && LIBEVENTEXTRA=`apt-cache pkgnames libevent-extra | sort -V | head -1` \
   && LIBEVENTOPENSSL=`apt-cache pkgnames libevent-openssl | sort -V | head -1` \
