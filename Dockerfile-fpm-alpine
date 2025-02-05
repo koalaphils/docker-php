@@ -160,6 +160,7 @@ RUN set -eux; \
     ./configure; \
     make && make test && make install || exit 1; \
     cd -; \
+  if dpkg --compare-versions ${PHP_VERSION} lt 8.4; then \
   pecl install --onlyreqdeps --nobuild event; \
     cd "$(pecl config-get temp_dir)/event"; \
     phpize; \
@@ -172,6 +173,7 @@ RUN set -eux; \
     ./configure; \
     make && make test && make install || exit 1; \
     cd -; \
+  fi; \
   pecl install --onlyreqdeps --nobuild ast; \
     cd "$(pecl config-get temp_dir)/ast"; \
     phpize; \
