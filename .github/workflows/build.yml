@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-image:
-    runs-on: macos-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 180
     permissions:
       packages: write
