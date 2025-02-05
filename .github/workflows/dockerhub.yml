@@ -16,7 +16,7 @@ on:
 jobs:
   build-versions:
     strategy:
-      max-parallel: 10
+      max-parallel: 3
       matrix:
         version:
           - '8.3'
