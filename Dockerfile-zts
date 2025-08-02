@@ -86,6 +86,8 @@ RUN set -eux; \
   ; \
   docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype --with-avif \
     ; \
+  docker-php-ext-configure opcache --disable-jit \
+    ; \
   docker-php-ext-install -j$(nproc) gd \
     ; \
   docker-php-ext-install -j$(nproc) \
