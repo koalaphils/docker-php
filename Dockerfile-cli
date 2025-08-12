@@ -84,6 +84,9 @@ RUN set -eux; \
     ${PHP_EXTRA_BUILD_DEPS:-} \
   ; export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
   ; \
+  if dpkg --compare-versions ${PHP_VERSION} le 8.2; then \
+    docker-php-ext-configure opcache --disable-opcache-jit; \
+  fi; \
   docker-php-ext-install -j$(nproc) opcache \
     ; \
   docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype --with-avif \
