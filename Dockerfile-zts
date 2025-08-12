@@ -215,6 +215,10 @@ RUN set -eux; \
 #    cd -; \
   docker-php-ext-enable --ini-name 0-docker-php-ext-igbinary.ini igbinary; \
   docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
+  if dpkg --compare-versions ${PHP_VERSION} lt 8.4; then \
+    docker-php-ext-enable event; \
+    docker-php-ext-enable mcrypt; \
+  fi; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
   apt-mark auto '.*' > /dev/null; \
   [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \

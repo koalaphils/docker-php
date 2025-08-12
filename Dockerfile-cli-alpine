@@ -161,7 +161,7 @@ RUN set -eux; \
     ./configure; \
     make && make test && make install || exit 1; \
     cd -; \
-  if dpkg --compare-versions ${PHP_VERSION} lt 8.4; then \
+  if [ "$(printf '%s\n' "${PHP_VERSION}" "8.4" | sort -V | head -n1)" != "8.4" ]; then \
   pecl install --onlyreqdeps --nobuild event; \
     cd "$(pecl config-get temp_dir)/event"; \
     phpize; \
@@ -201,6 +201,10 @@ RUN set -eux; \
 #    cd -; \
   docker-php-ext-enable --ini-name 0-docker-php-ext-igbinary.ini igbinary; \
   docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
+  if [ "$(printf '%s\n' "${PHP_VERSION}" "8.4" | sort -V | head -n1)" != "8.4" ]; then \
+    docker-php-ext-enable event; \
+    docker-php-ext-enable mcrypt; \
+  fi; \
   cp /usr/bin/envsubst /usr/local/bin/envsubst; \
   runDeps="$( \
       scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
