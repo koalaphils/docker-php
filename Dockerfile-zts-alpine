@@ -4,223 +4,152 @@ LABEL org.opencontainers.image.description="PHP base image with commonly used ex
      "com.koalaphils.vendor"="Koala Software Technology Innovations" \
      "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
-RUN set -eux; \
-  apk update \
-  && apk add --no-cache \
-    bash \
-    c-ares \
-    freetype \
-    git \
-    imagemagick-libs \
-    libavif \
-    libcmph \
-    libedit \
-    libevent \
-    libjpeg-turbo \
-    libmcrypt \
-    libmemcached \
-    libmemcached-libs \
-    libpng \
-    libsodium \
-    libuv \
-    libxpm \
-    libzip \
-    lz4-libs \
-    msgpack-c \
-    netcat-openbsd \
-    pcre \
-    tzdata \
-    unixodbc \
-    unzip \
-    zlib \
-  ; \
-  apk add --no-cache --virtual .build-deps \
+COPY --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_PROCESS_TIMEOUT=600
+
+ENV PHPIZE_DEPS \
     $PHPIZE_DEPS \
-    build-base \
-    argon2-dev \
-    c-ares-dev \
-    curl-dev \
-    cyrus-sasl-dev \
-    freetype-dev \
-    gettext-dev \
-    icu-dev \
-    imagemagick-dev \
-    jpeg-dev \
-    libavif-dev \
-    libedit-dev \
-    libevent-dev \
-    libjpeg-turbo-dev \
-    libmcrypt-dev \
-    libmemcached-dev \
-    linux-headers \
-    libpng-dev \
-    libsodium-dev \
-    libuv-dev \
-    libwebp-dev \
-    libxml2-dev \
-    libxpm-dev \
-    libzip-dev \
-    lz4-dev \
-    msgpack-c-dev \
-    oniguruma-dev \
-    openssl-dev \
-    pcre-dev \
-    unixodbc-dev \
-    zlib-dev \
-    ${PHP_EXTRA_BUILD_DEPS:-} \
-  ; export CFLAGS="$PHP_CFLAGS" CPPFLAGS="$PHP_CPPFLAGS" LDFLAGS="$PHP_LDFLAGS" \
-  ; \
-  if dpkg --compare-versions ${PHP_VERSION} lt 8.3; then \
-    docker-php-ext-configure opcache --disable-opcache-jit; \
-  fi; \
-  docker-php-ext-install -j$(nproc) opcache \
-    ; \
-  docker-php-ext-configure gd --with-jpeg --with-xpm --with-webp --with-freetype --with-avif \
-    ; \
-  docker-php-ext-install -j$(nproc) gd \
-    ; \
-  docker-php-ext-install -j$(nproc) \
-    bcmath \
-    dba \
+# Add dependencies for PIE \
+    autoconf \
+    automake \
+    gcc \
+    git \
+    libtool \
+    m4 \
+    make \
+# Add helper tools for development \
     gettext \
-    intl \
-    mysqli \
-    pcntl \
-    pdo_mysql \
-    xml \
-    zip \
+    netcat-openbsd \
+    wget
+
+# Install dependencies
+RUN set -eux; \
+    apk update; \
+    apk add --no-cache \
+        $PHPIZE_DEPS \
+        freetype \
+        icu \
+        imagemagick-libs \
+        libavif \
+        libjpeg-turbo \
+        libmcrypt \
+        libmcrypt \
+        libmemcached-libs \
+        libpng \
+        libwebp \
+        libzip \
+        msgpack-c \
+        unixodbc \
+        zlib \
+    ;
+
+RUN set -eux; \
+    apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        freetype-dev \
+        gettext-dev \
+        icu-dev \
+        imagemagick-dev \
+        jpeg-dev \
+        libavif-dev \
+        libmcrypt-dev \
+        libmemcached-dev \
+        libpng-dev \
+        libwebp-dev \
+        libzip-dev \
+        linux-headers \
+        unixodbc-dev \
+        zlib-dev \
     ; \
-  rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini \
-    ; \
-  docker-php-ext-enable sodium \
-    ; \
-  docker-php-ext-install -j$(nproc) \
-    --ini-name 0-docker-php-ext-sockets.ini \
-    sockets \
-    ; \
-  pecl update-channels \
-    ; \
-  pecl install --onlyreqdeps --nobuild apcu; \
-    cd "$(pecl config-get temp_dir)/apcu"; \
-    phpize; \
-    ./configure --enable-apcu; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild igbinary; \
-    cd "$(pecl config-get temp_dir)/igbinary"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild msgpack; \
-    cd "$(pecl config-get temp_dir)/msgpack"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  set +e; \
-  if dpkg --compare-versions ${PHP_VERSION} lt 8.3; then \
-  pecl install --onlyreqdeps --nobuild imagick; \
-    cd "$(pecl config-get temp_dir)/imagick"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild sqlsrv; \
-    cd "$(pecl config-get temp_dir)/sqlsrv"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild pdo_sqlsrv; \
-    cd "$(pecl config-get temp_dir)/pdo_sqlsrv"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  fi; \
-  set -e; \
-  pecl install --onlyreqdeps --nobuild redis; \
-    cd "$(pecl config-get temp_dir)/redis"; \
-    phpize; \
-    ./configure --enable-redis-igbinary --enable-redis-json --enable-redis-msgpack --enable-redis-lz4 --with-liblz4=/usr/include; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild memcached; \
-    cd "$(pecl config-get temp_dir)/memcached"; \
-    phpize; \
-    ./configure --enable-memcached-igbinary --enable-memcached-json --enable-memcached-session --enable-memcached-sasl --enable-memcached-msgpack; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild xhprof; \
-    cd "$(pecl config-get temp_dir)/xhprof/extension"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild xdebug; \
-    cd "$(pecl config-get temp_dir)/xdebug"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  if dpkg --compare-versions ${PHP_VERSION} lt 8.4; then \
-  pecl install --onlyreqdeps --nobuild event; \
-    cd "$(pecl config-get temp_dir)/event"; \
-    phpize; \
-    ./configure --with-event-core --enable-event-sockets --with-event-openssl --with-event-extra; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild mcrypt; \
-    cd "$(pecl config-get temp_dir)/mcrypt"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  fi; \
-  pecl install --onlyreqdeps --nobuild ast; \
-    cd "$(pecl config-get temp_dir)/ast"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-  pecl install --onlyreqdeps --nobuild pcov; \
-    cd "$(pecl config-get temp_dir)/pcov"; \
-    phpize; \
-    ./configure; \
-    make && make test && make install || exit 1; \
-    cd -; \
-#  pecl install --onlyreqdeps --nobuild swoole; \
-#    cd "$(pecl config-get temp_dir)/swoole"; \
-#    phpize; \
-#    ./configure; \
-#    make && make test && make install || exit 1; \
-#    cd -; \
-#  pecl install --onlyreqdeps --nobuild uv-beta; \
-#    cd "$(pecl config-get temp_dir)/uv"; \
-#    phpize; \
-#    ./configure; \
-#    make && make test && make install || exit 1; \
-#    cd -; \
-  docker-php-ext-enable --ini-name 0-docker-php-ext-igbinary.ini igbinary; \
-  docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
-  cp /usr/bin/envsubst /usr/local/bin/envsubst; \
-  runDeps="$( \
-      scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
-          | tr ',' '\n' \
-          | sort -u \
-          | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-  )"; \
-  apk add --no-cache $runDeps; \
-  \
-  apk del --no-network .build-deps; \
-  rm -rf /tmp/* ~/.pearrc; \
-  php --version \
-  ; mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
-  ; sed -i "s|^expose_php\s*=\s*\(.*\)|expose_php=Off|g" $PHP_INI_DIR/php.ini \
-  ; sed -i "s|^\(;\)*realpath_cache_size\s*=\s*\(.*\)|realpath_cache_size=\2|g" $PHP_INI_DIR/php.ini \
-  ; sed -i "s|^\(;\)*realpath_cache_ttl\s*=\s*\(.*\)|realpath_cache_ttl=\2|g" $PHP_INI_DIR/php.ini \
-  ;
+# Install PHP extensions from source using PECL \
+    pecl install --onlyreqdeps --nobuild igbinary; \
+        cd "$(pecl config-get temp_dir)/igbinary"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+        docker-php-ext-enable --ini-name 0-docker-php-ext-igbinary.ini igbinary; \
+    pecl install --onlyreqdeps --nobuild msgpack; \
+        cd "$(pecl config-get temp_dir)/msgpack"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+        docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
+    pecl install --onlyreqdeps --nobuild sqlsrv; \
+        cd "$(pecl config-get temp_dir)/sqlsrv"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+    pecl install --onlyreqdeps --nobuild pdo_sqlsrv; \
+        cd "$(pecl config-get temp_dir)/pdo_sqlsrv"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+    pecl install --onlyreqdeps --nobuild xhprof; \
+        cd "$(pecl config-get temp_dir)/xhprof/extension"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+\
+# Install PHP extensions built into the official image \
+    docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype --with-avif; \
+    docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        dba \
+        gd \
+        gettext \
+        intl \
+        mysqli \
+        pdo_mysql \
+        pcntl \
+        sockets \
+        zip; \
+    \
+# Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
+    pie install apcu/apcu; \
+    pie install phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack; \
+    pie install php-memcached/php-memcached --enable-memcached-igbinary --enable-memcached-msgpack; \
+    pie install xdebug/xdebug; \
+    pie install osmanov/pecl-ev; \
+    pie install pecl/pcov; \
+    pie install nikic/php-ast; \
+    pie install swoole/swoole; \
+    pie install pecl/mcrypt; \
+    pie install imagick/imagick; \
+# Cleanup \
+	runDeps="$( \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
+			| tr ',' '\n' \
+			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+	)"; \
+	apk add --no-cache $runDeps; \
+	\
+	apk del --no-network .build-deps; \
+	\
+# update pecl channel definitions https://github.com/docker-library/php/issues/443
+	pecl update-channels; \
+	rm -rf /tmp/pear ~/.pearrc; \
+	\
+# smoke test
+	php -m \
+# remove all extensions by default except for igbinary and msgpack \
+    rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
+    rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
+# re-enable default extensions by official image \
+    docker-php-ext-enable sodium opcache; \
+# copy envsubst for easier use in entrypoint scripts \
+    cp /usr/bin/envsubst /usr/local/bin/envsubst; \
+    mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
+    ; sed -i "s|^expose_php\s*=\s*\(.*\)|expose_php=Off|g" $PHP_INI_DIR/php.ini \
+    ; sed -i "s|^\(;\)*realpath_cache_size\s*=\s*\(.*\)|realpath_cache_size=\2|g" $PHP_INI_DIR/php.ini \
+    ; sed -i "s|^\(;\)*realpath_cache_ttl\s*=\s*\(.*\)|realpath_cache_ttl=\2|g" $PHP_INI_DIR/php.ini \
+    ;
 
 WORKDIR /var/www/html
 CMD ["php", "-a"]
