@@ -111,16 +111,17 @@ RUN set -eux; \
         zip; \
     \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
-    pie install apcu/apcu; \
-    pie install phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack; \
-    pie install php-memcached/php-memcached --enable-memcached-igbinary --enable-memcached-msgpack; \
-    pie install xdebug/xdebug; \
-    pie install osmanov/pecl-ev; \
-    pie install pecl/pcov; \
-    pie install nikic/php-ast; \
-    pie install swoole/swoole; \
-    pie install pecl/mcrypt; \
-    pie install imagick/imagick; \
+    pie install apcu/apcu --skip-enable-extension; \
+    pie install phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack --skip-enable-extension; \
+    pie install php-memcached/php-memcached --enable-memcached-igbinary --enable-memcached-msgpack --skip-enable-extension; \
+    pie install xdebug/xdebug --skip-enable-extension; \
+    pie install osmanov/pecl-ev --skip-enable-extension; \
+    pie install pecl/pcov --skip-enable-extension; \
+    pie install nikic/php-ast --skip-enable-extension; \
+    pie install swoole/swoole --skip-enable-extension; \
+    pie install pecl/mcrypt --skip-enable-extension; \
+    pie install imagick/imagick --skip-enable-extension; \
+    \
 # Cleanup \
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
