@@ -17,6 +17,7 @@ jobs:
   build-versions:
     permissions:
       contents: read
+      packages: write
       pull-requests: write
     strategy:
       max-parallel: 7
@@ -46,6 +47,7 @@ jobs:
     needs: ['build-versions']
     permissions:
       contents: read
+      packages: write
       pull-requests: write
     steps:
       - name: Clear cache
