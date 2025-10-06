@@ -9,17 +9,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Dependencies for building PHP extensions
-ENV PHPIZE_DEPS \
-    $PHPIZE_DEPS \
-# Add dependencies for PIE \
-    autoconf \
-    automake \
-    build-essential \
-    gcc \
-    git \
-    libtool \
-    m4 \
-    make
+# Add dependencies for PIE
+ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-essential gcc git libtool m4 make"
 
 # Fixes for apt-get hash sum mismatch errors
 RUN { \

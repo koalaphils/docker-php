@@ -7,17 +7,9 @@ LABEL org.opencontainers.image.description="PHP base image with commonly used ex
 COPY --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-ENV PHPIZE_DEPS \
-    $PHPIZE_DEPS \
-# Add dependencies for PIE \
-    autoconf \
-    automake \
-    build-base \
-    gcc \
-    git \
-    libtool \
-    m4 \
-    make
+# Dependencies for building PHP extensions
+# Add dependencies for PIE
+ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 make"
 
 # Install dependencies
 RUN set -eux; \
