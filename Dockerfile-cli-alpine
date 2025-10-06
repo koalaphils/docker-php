@@ -167,7 +167,7 @@ RUN set -eux; \
 	rm -rf /tmp/pear ~/.pearrc; \
 	\
 # smoke test
-	php -m \
+	php -m; \
 # remove all extensions by default except for igbinary and msgpack \
     rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
     rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
