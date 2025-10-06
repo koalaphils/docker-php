@@ -14,15 +14,12 @@ ENV PHPIZE_DEPS \
 # Add dependencies for PIE \
     autoconf \
     automake \
+    build-essential \
     gcc \
     git \
     libtool \
     m4 \
-    make \
-# Add helper tools for development \
-    gettext-base \
-    netcat-traditional \
-    wget
+    make
 
 # Fixes for apt-get hash sum mismatch errors
 RUN { \
@@ -37,46 +34,66 @@ RUN { \
 # Install dependencies
 RUN set -eux; \
     apt-get clean; \
-    apt-get update; \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
-        $PHPIZE_DEPS \
+# Add helper tools for development \
+        curl \
+        gettext-base \
+        locales \
+        netcat-traditional \
+        wget \
+# Add SSL support \
+        ca-certificates \
+        gnupg \
+        openssl \
+# PHP extension dependencies \
         `apt-cache pkgnames libavif | sort -V | head -1` \
+        `apt-cache pkgnames libc6 | sort -V | head -1` \
+        `apt-cache pkgnames libc-ares | sort -V | head -1` \
+        `apt-cache pkgnames libcurl4 | sort -V | head -1` \
         `apt-cache pkgnames libfreetype | sort -V | head -1` \
         `apt-cache pkgnames libicu | grep -v "java" | sort -V | head -1` \
         `apt-cache pkgnames libjpeg | sort -V | head -1` \
-        `apt-cache pkgnames libpng | sort -V | head -1` \
-        `apt-cache pkgnames libwebp | sort -V | head -1` \
         `apt-cache pkgnames libmagickcore | grep headers | sort | head -1` \
         `apt-cache pkgnames libmagickwand | grep headers | sort | head -1` \
         `apt-cache pkgnames libmcrypt | sort -V | head -1` \
         `apt-cache pkgnames libmemcache | sort -V | head -1` \
         `apt-cache pkgnames libmsgpack | sort -V | head -1` \
+        `apt-cache pkgnames libpng | sort -V | head -1` \
+        `apt-cache pkgnames libsqlite3 | sort -V | head -1` \
+        `apt-cache pkgnames libwebp | sort -V | head -1` \
         `apt-cache pkgnames libzip | grep -v "java" | sort -V | head -1` \
         `apt-cache pkgnames unixodbc | sort -V | head -1` \
         `apt-cache pkgnames zlib | sort -V | head -1` \
-    ; \
+    && \
     apt-get dist-clean
 
 # Install PHP extension build dependencies
 RUN set -eux; \
     savedAptMark="$(apt-mark showmanual)"; \
-    apt-get update; \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
+        $PHPIZE_DEPS \
         libicu-dev \
-        libpng-dev \
-        libmsgpack-dev \
-        libmemcached-dev \
         libmagickcore-dev \
         libmagickwand-dev \
+        libmemcached-dev \
+        libmsgpack-dev \
+        libpng-dev \
+        libssl-dev \
         `apt-cache pkgnames libavif | grep dev | sort | head -1` \
+        `apt-cache pkgnames libc6 | grep dev | sort | head -1` \
+        `apt-cache pkgnames libc-ares | grep dev | sort | head -1` \
         `apt-cache pkgnames libfreetype | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libjpeg | grep dev | sort -V | head -1` \
-        `apt-cache pkgnames libwebp | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libmcrypt | grep dev | sort | head -1` \
+        `apt-cache pkgnames libsqlite3 | grep dev | sort -V | head -1` \
+        `apt-cache pkgnames libwebp | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libzip | grep dev | sort | head -1` \
+        `apt-cache pkgnames licurl4 | grep dev | grep openssl | sort -V` \
         `apt-cache pkgnames unixodbc | grep dev | sort -V | head -1` \
         `apt-cache pkgnames zlib | grep dev | sort -V | head -1` \
-    ; \
+    && update-ca-certificates; \
 \
 # Install PHP extensions from source using PECL \
     pecl install --onlyreqdeps --nobuild igbinary; \
@@ -99,18 +116,21 @@ RUN set -eux; \
         ./configure; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
+        docker-php-ext-enable sqlsrv; \
     pecl install --onlyreqdeps --nobuild pdo_sqlsrv; \
         cd "$(pecl config-get temp_dir)/pdo_sqlsrv"; \
         phpize; \
         ./configure; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
+        docker-php-ext-enable pdo_sqlsrv; \
     pecl install --onlyreqdeps --nobuild xhprof; \
         cd "$(pecl config-get temp_dir)/xhprof/extension"; \
         phpize; \
         ./configure; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
+        docker-php-ext-enable xhprof; \
 \
 # Install PHP extensions built into the official image \
     docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype --with-avif; \
@@ -119,24 +139,36 @@ RUN set -eux; \
         dba \
         gd \
         gettext \
+        iconv \
         intl \
         mysqli \
         pdo_mysql \
+        pdo_sqlite \
         pcntl \
         sockets \
         zip; \
     \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
-    pie install apcu/apcu --skip-enable-extension; \
-    pie install phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack --skip-enable-extension; \
-    pie install php-memcached/php-memcached --enable-memcached-igbinary --enable-memcached-msgpack --skip-enable-extension; \
-    pie install xdebug/xdebug --skip-enable-extension; \
-    pie install osmanov/pecl-ev --skip-enable-extension; \
-    pie install pecl/pcov --skip-enable-extension; \
-    pie install nikic/php-ast --skip-enable-extension; \
-    pie install swoole/swoole --skip-enable-extension; \
-    pie install pecl/mcrypt --skip-enable-extension; \
-    pie install imagick/imagick --skip-enable-extension; \
+    pie install --skip-enable-extension apcu/apcu  && \
+    pie install --skip-enable-extension imagick/imagick && \
+    pie install --skip-enable-extension nikic/php-ast  && \
+    pie install --skip-enable-extension osmanov/pecl-ev  && \
+    pie install --skip-enable-extension pecl/mcrypt  && \
+    pie install --skip-enable-extension pecl/pcov  && \
+    pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
+    pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
+    pie install --skip-enable-extension swoole/swoole  && \
+    pie install --skip-enable-extension xdebug/xdebug  && \
+    docker-php-ext-enable apcu \
+      imagick \
+      ast \
+      ev \
+      mcrypt \
+      pcov \
+      memcached \
+      redis \
+      swoole \
+      xdebug ; \
     \
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies \
     apt-mark auto '.*' > /dev/null; \

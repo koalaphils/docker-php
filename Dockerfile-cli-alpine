@@ -5,60 +5,75 @@ LABEL org.opencontainers.image.description="PHP base image with commonly used ex
      "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
 COPY --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
-ENV COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_PROCESS_TIMEOUT=600
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 ENV PHPIZE_DEPS \
     $PHPIZE_DEPS \
 # Add dependencies for PIE \
     autoconf \
     automake \
+    build-base \
     gcc \
     git \
     libtool \
     m4 \
-    make \
-# Add helper tools for development \
-    gettext \
-    netcat-openbsd \
-    wget
+    make
 
 # Install dependencies
 RUN set -eux; \
-    apk update; \
+    apk update && \
     apk add --no-cache \
-        $PHPIZE_DEPS \
+# Add helper tools for development \
+        curl \
+        gettext \
+        netcat-openbsd \
+        wget \
+# Add SSL support \
+        ca-certificates \
+        gnupg \
+        openssl \
+# PHP extension dependencies \
+        c-ares \
         freetype \
-        icu \
+        icu-libs \
+        imagemagick \
         imagemagick-libs \
         libavif \
+        libcurl \
         libjpeg-turbo \
-        libmcrypt \
         libmcrypt \
         libmemcached-libs \
         libpng \
         libwebp \
         libzip \
         msgpack-c \
+        musl \
+        sqlite-libs \
         unixodbc \
         zlib \
     ;
 
 RUN set -eux; \
+    apk update && \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
+        curl-dev \
         freetype-dev \
         gettext-dev \
         icu-dev \
         imagemagick-dev \
-        jpeg-dev \
         libavif-dev \
+        libjpeg-turbo-dev \
         libmcrypt-dev \
         libmemcached-dev \
         libpng-dev \
         libwebp-dev \
         libzip-dev \
         linux-headers \
+        msgpack-c-dev \
+        musl-dev \
+        openssl-dev \
+        sqlite-dev \
         unixodbc-dev \
         zlib-dev \
     ; \
@@ -83,18 +98,21 @@ RUN set -eux; \
         ./configure; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
+        docker-php-ext-enable sqlsrv; \
     pecl install --onlyreqdeps --nobuild pdo_sqlsrv; \
         cd "$(pecl config-get temp_dir)/pdo_sqlsrv"; \
         phpize; \
         ./configure; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
+        docker-php-ext-enable pdo_sqlsrv; \
     pecl install --onlyreqdeps --nobuild xhprof; \
         cd "$(pecl config-get temp_dir)/xhprof/extension"; \
         phpize; \
         ./configure; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
+        docker-php-ext-enable xhprof; \
 \
 # Install PHP extensions built into the official image \
     docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype --with-avif; \
@@ -106,21 +124,32 @@ RUN set -eux; \
         intl \
         mysqli \
         pdo_mysql \
+        pdo_sqlite \
         pcntl \
         sockets \
         zip; \
     \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
-    pie install apcu/apcu --skip-enable-extension; \
-    pie install phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack --skip-enable-extension; \
-    pie install php-memcached/php-memcached --enable-memcached-igbinary --enable-memcached-msgpack --skip-enable-extension; \
-    pie install xdebug/xdebug --skip-enable-extension; \
-    pie install osmanov/pecl-ev --skip-enable-extension; \
-    pie install pecl/pcov --skip-enable-extension; \
-    pie install nikic/php-ast --skip-enable-extension; \
-    pie install swoole/swoole --skip-enable-extension; \
-    pie install pecl/mcrypt --skip-enable-extension; \
-    pie install imagick/imagick --skip-enable-extension; \
+    pie install --skip-enable-extension apcu/apcu  && \
+    pie install --skip-enable-extension imagick/imagick && \
+    pie install --skip-enable-extension nikic/php-ast  && \
+    pie install --skip-enable-extension osmanov/pecl-ev  && \
+    pie install --skip-enable-extension pecl/mcrypt  && \
+    pie install --skip-enable-extension pecl/pcov  && \
+    pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
+    pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
+    pie install --skip-enable-extension swoole/swoole  && \
+    pie install --skip-enable-extension xdebug/xdebug  && \
+    docker-php-ext-enable apcu \
+      imagick \
+      ast \
+      ev \
+      mcrypt \
+      pcov \
+      memcached \
+      redis \
+      swoole \
+      xdebug ; \
     \
 # Cleanup \
 	runDeps="$( \
