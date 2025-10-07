@@ -21,7 +21,7 @@ jobs:
       pull-requests: write
       actions: write
     strategy:
-      max-parallel: 7
+      max-parallel: 14
       matrix:
         version:
           - '8.4'
@@ -51,6 +51,9 @@ jobs:
       packages: write
       pull-requests: write
       actions: write
+    concurrency:
+      group: cache-cleanup
+      cancel-in-progress: true
     steps:
       - name: Clear cache
         uses: actions/github-script@v8

@@ -85,6 +85,11 @@ RUN set -eux; \
         `apt-cache pkgnames unixodbc | grep dev | sort -V | head -1` \
         `apt-cache pkgnames zlib | grep dev | sort -V | head -1` \
     && update-ca-certificates; \
+    export \
+		CFLAGS="$PHP_CFLAGS" \
+		CPPFLAGS="$PHP_CPPFLAGS" \
+		LDFLAGS="$PHP_LDFLAGS" \
+    ; \
 \
 # Install PHP extensions from source using PECL \
     pecl install --onlyreqdeps --nobuild igbinary; \
@@ -133,9 +138,12 @@ RUN set -eux; \
         iconv \
         intl \
         mysqli \
+        odbc \
+        opcache \
+        pcntl \
+        pdo \
         pdo_mysql \
         pdo_sqlite \
-        pcntl \
         sockets \
         zip; \
     \

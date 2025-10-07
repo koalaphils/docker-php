@@ -69,6 +69,12 @@ RUN set -eux; \
         unixodbc-dev \
         zlib-dev \
     ; \
+    export \
+		CFLAGS="$PHP_CFLAGS" \
+		CPPFLAGS="$PHP_CPPFLAGS" \
+		LDFLAGS="$PHP_LDFLAGS" \
+    ; \
+\
 # Install PHP extensions from source using PECL \
     pecl install --onlyreqdeps --nobuild igbinary; \
         cd "$(pecl config-get temp_dir)/igbinary"; \
@@ -113,11 +119,15 @@ RUN set -eux; \
         dba \
         gd \
         gettext \
+        iconv \
         intl \
         mysqli \
+        odbc \
+        opcache \
+        pcntl \
+        pdo \
         pdo_mysql \
         pdo_sqlite \
-        pcntl \
         sockets \
         zip; \
     \
