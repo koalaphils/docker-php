@@ -137,7 +137,6 @@ RUN set -eux; \
         gettext \
         intl \
         mysqli \
-        opcache \
         pcntl \
         pdo \
         pdo_mysql \
