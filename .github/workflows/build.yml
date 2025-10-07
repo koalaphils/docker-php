@@ -19,6 +19,9 @@ jobs:
     timeout-minutes: 180
     permissions:
       packages: write
+      actions: write
+      contents: read
+      pull-requests: write
     steps:
       # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Repo
