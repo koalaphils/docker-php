@@ -135,7 +135,6 @@ RUN set -eux; \
         dba \
         gd \
         gettext \
-        iconv \
         intl \
         mysqli \
         odbc \
