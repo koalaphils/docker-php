@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV COMPOSER_ALLOW_SUPERUSER=1
 # Dependencies for building PHP extensions
 # Add dependencies for PIE
-ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 make"
+ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-essential gcc git libtool m4 make"
 
 # Copy PIE and Composer binaries
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
