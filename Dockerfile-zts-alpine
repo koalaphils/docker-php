@@ -4,12 +4,14 @@ LABEL org.opencontainers.image.description="PHP base image with commonly used ex
      "com.koalaphils.vendor"="Koala Software Technology Innovations" \
      "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
-COPY --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 ENV COMPOSER_ALLOW_SUPERUSER=1
-
 # Dependencies for building PHP extensions
 # Add dependencies for PIE
 ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 make"
+
+# Copy PIE and Composer binaries
+COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
+COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 
 # Install dependencies
 RUN set -eux; \
