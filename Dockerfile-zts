@@ -41,8 +41,8 @@ RUN set -eux; \
         openssl \
 # PHP extension dependencies \
         `apt-cache pkgnames libavif | sort -V | head -1` \
-        `apt-cache pkgnames libc6 | sort -V | head -1` \
         `apt-cache pkgnames libc-ares | sort -V | head -1` \
+        `apt-cache pkgnames libc6 | sort -V | head -1` \
         `apt-cache pkgnames libcurl4 | sort -V | head -1` \
         `apt-cache pkgnames libfreetype | sort -V | head -1` \
         `apt-cache pkgnames libicu | grep -v "java" | sort -V | head -1` \
@@ -55,6 +55,7 @@ RUN set -eux; \
         `apt-cache pkgnames libpng | sort -V | head -1` \
         `apt-cache pkgnames libsqlite3 | sort -V | head -1` \
         `apt-cache pkgnames libwebp | sort -V | head -1` \
+        `apt-cache pkgnames libxsl | grep -v dev | sort -V | head -1` \
         `apt-cache pkgnames libzip | grep -v "java" | sort -V | head -1` \
         `apt-cache pkgnames unixodbc | sort -V | head -1` \
         `apt-cache pkgnames zlib | sort -V | head -1` \
@@ -75,13 +76,14 @@ RUN set -eux; \
         libpng-dev \
         libssl-dev \
         `apt-cache pkgnames libavif | grep dev | sort | head -1` \
-        `apt-cache pkgnames libc6 | grep dev | sort | head -1` \
         `apt-cache pkgnames libc-ares | grep dev | sort | head -1` \
+        `apt-cache pkgnames libc6 | grep dev | sort | head -1` \
         `apt-cache pkgnames libfreetype | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libjpeg | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libmcrypt | grep dev | sort | head -1` \
         `apt-cache pkgnames libsqlite3 | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libwebp | grep dev | sort -V | head -1` \
+        `apt-cache pkgnames libxsl | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libzip | grep dev | sort | head -1` \
         `apt-cache pkgnames licurl4 | grep dev | grep openssl | sort -V` \
         `apt-cache pkgnames unixodbc | grep dev | sort -V | head -1` \
@@ -144,6 +146,7 @@ RUN set -eux; \
         pdo_mysql \
         pdo_sqlite \
         sockets \
+        xsl \
         zip; \
     \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \

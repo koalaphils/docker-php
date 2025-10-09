@@ -39,6 +39,7 @@ RUN set -eux; \
         libmemcached-libs \
         libpng \
         libwebp \
+        libxslt \
         libzip \
         msgpack-c \
         musl \
@@ -62,6 +63,7 @@ RUN set -eux; \
         libmemcached-dev \
         libpng-dev \
         libwebp-dev \
+        libxslt-dev \
         libzip-dev \
         linux-headers \
         msgpack-c-dev \
@@ -128,6 +130,7 @@ RUN set -eux; \
         pdo_mysql \
         pdo_sqlite \
         sockets \
+        xsl \
         zip; \
     \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
