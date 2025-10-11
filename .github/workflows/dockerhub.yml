@@ -21,7 +21,7 @@ jobs:
       pull-requests: write
       actions: write
     strategy:
-      max-parallel: 14
+      max-parallel: 7
       matrix:
         version:
           - '8.4'

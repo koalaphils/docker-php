@@ -65,7 +65,7 @@ jobs:
         run: |
           # This step only echoes the expression into an output, evaluated by Actions
           # Use the same hashFiles() pattern you used in your build step.
-          echo "scope_hash=${{ hashFiles(format('Dockerfile-{0}', matrix.variant)) }}" >> $GITHUB_OUTPUT
+          echo "scope_hash=${{ hashFiles(format('Dockerfile-{0}', inputs.variant)) }}" >> $GITHUB_OUTPUT
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (use cache)
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: docker/build-push-action@v6
@@ -77,7 +77,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: true
           sbom: true
           push: true
@@ -94,7 +94,7 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: true
           sbom: true
           push: true
@@ -105,8 +105,8 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const variant = "${{ matrix.variant }}";
-            const version = "${{ matrix.version }}";
+            const variant = "${{ inputs.variant }}";
+            const version = "${{ inputs.version }}";
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             
@@ -186,8 +186,8 @@ jobs:
                 const ageMs = createdAt ? (now - createdAt) : null;
                 const ageDays = ageMs ? (ageMs / (1000*60*60*24)) : null;
             
-                const isSameFull = scopeHash && cacheKey.endsWith(`${scopeHash}`);
-                const isSameShort = shortScopeHash && cacheKey.endsWith(`-${shortScopeHash}`);
+                const isSameFull = scopeHash && cacheKey.includes(`-${scopeHash}-`);
+                const isSameShort = shortScopeHash && cacheKey.includes(`-${shortScopeHash}-`);
                 const isSameHash = isSameFull || isSameShort;
             
                 // Rule:
