@@ -60,20 +60,158 @@ jobs:
           registry: public.ecr.aws
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }}
+      - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (use cache)
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: docker/build-push-action@v6
         with:
-          context: ./
-          file: ./Dockerfile-${{ inputs.variant }}
+          context: .
+          file: Dockerfile-${{ inputs.variant }}
           build-args: |
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}
+          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ github.sha }}
+          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ github.sha }}
           provenance: true
           sbom: true
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
+      - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (no cache)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile-${{ inputs.variant }}
+          build-args: |
+            PHP_VERSION=${{ inputs.version }}
+          builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64
+          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ github.sha }}
+          provenance: true
+          sbom: true
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+      - name: Prune stale GHA build caches (branch-scoped, preserve current commit)
+        uses: actions/github-script@v8
+        # Note: we DO NOT skip this step for manual runs — it will remove stale caches for the branch.
+        with:
+          script: |
+            // Inputs from the reusable workflow
+            const variant = '${{ inputs.variant }}';
+            const version = '${{ inputs.version }}';
+            
+            // Owner / repo
+            const owner = context.repo.owner;
+            const repo = context.repo.repo; // same as github.event.repository.name
+            
+            // Compute ref_name (behaves like ${{ github.ref_name }})
+            function getRefName(ctx) {
+              if (ctx.ref_name) return ctx.ref_name;
+              if (!ctx.ref) return '';
+              const parts = ctx.ref.split('/');
+              if (parts[0] === 'refs' && parts[1] === 'heads') return parts.slice(2).join('/');
+              return parts.slice(2).join('/');
+            }
+            const refName = getRefName(context);
+            
+            // Current commit SHAs
+            const sha = context.sha || process.env.GITHUB_SHA || '';
+            const shortSha = (sha || '').slice(0, 7);
+            
+            // Scope prefix format you use when caching:
+            // `${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-`
+            const scopePrefix = `${repo}-${variant}-${version}-${refName}-`;
+            
+            console.log(`Prune-run: owner=${owner} repo=${repo} variant=${variant} version=${version}`);
+            console.log(`Ref: ${refName}   SHA: ${sha} (short ${shortSha})`);
+            console.log(`Targeting cache keys that include prefix: "${scopePrefix}"`);
+            console.log('Preserving any cache that matches the current commit SHA (full or short)');
+            
+            // helpers
+            const sleep = ms => new Promise(r => setTimeout(r, ms));
+            async function fetchCaches(page = 1) {
+              return github.rest.actions.getActionsCacheList({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+                sort: 'created_at',
+                direction: 'asc',
+              });
+            }
+            
+            let page = 1;
+            let deleted = 0;
+            let seenAny = false;
+            
+            // iterate pages of caches
+            while (true) {
+              let res;
+              try {
+                res = await fetchCaches(page);
+              } catch (err) {
+                core.warning(`Failed to list caches (page ${page}): ${err?.message || err}. Retrying after 5s`);
+                await sleep(5000);
+                try { res = await fetchCaches(page); }
+                catch (err2) {
+                  core.error(`Failed again to list caches (page ${page}): ${err2?.message || err2}. Aborting prune.`);
+                  break;
+                }
+              }
+            
+              const caches = res?.data?.actions_caches ?? [];
+              if (!caches.length) break; // no more pages
+            
+              seenAny = true;
+              for (const cache of caches) {
+                const cacheKey = String(cache.key || '');
+            
+                // only consider caches belonging to this exact repo+variant+version+ref group
+                if (!cacheKey.includes(scopePrefix)) {
+                  continue;
+                }
+            
+                // preserve cache(s) that correspond to this exact commit (full or short sha)
+                const isCurrentFull = sha && cacheKey.includes(sha);
+                const isCurrentShort = shortSha && cacheKey.includes(shortSha);
+                if (isCurrentFull || isCurrentShort) {
+                  console.log(`Preserve: cache id=${cache.id} key="${cacheKey}" (matches current commit)`);
+                  continue;
+                }
+            
+                // delete everything else that matches the scopePrefix (same refName + same variant/version but different commit)
+                try {
+                  console.log(`Deleting: cache id=${cache.id} key="${cacheKey}"`);
+                  await github.rest.actions.deleteActionsCacheById({
+                    owner,
+                    repo,
+                    cache_id: cache.id,
+                  });
+                  deleted++;
+                  // mild per-delete delay
+                  await sleep(800);
+                } catch (delErr) {
+                  core.warning(`Failed to delete cache id=${cache.id}: ${delErr?.message || delErr}`);
+                  if (delErr && delErr.status === 403) {
+                    core.warning('Received 403 - likely rate-limited. Backing off 30s.');
+                    await sleep(30000);
+                  } else {
+                    await sleep(2000);
+                  }
+                  // continue deleting remaining caches
+                }
+              } // end caches loop
+            
+              page++;
+              // short pause between pages to be polite to API
+              await sleep(900);
+            } // end paging
+            
+            if (!seenAny) {
+              console.log(`No caches found in repo ${repo} (or none returned by list API).`);
+            }
+            console.log(`Prune complete. Deleted ${deleted} cache(s) for scope prefix "${scopePrefix}".`);
