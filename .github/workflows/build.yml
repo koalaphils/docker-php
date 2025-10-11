@@ -60,6 +60,12 @@ jobs:
           registry: public.ecr.aws
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Compute scope hash for this combo
+        id: compute_hash
+        run: |
+          # This step only echoes the expression into an output, evaluated by Actions
+          # Use the same hashFiles() pattern you used in your build step.
+          echo "scope_hash=${{ hashFiles(format('Dockerfile-{0}', matrix.variant)) }}" >> $GITHUB_OUTPUT
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (use cache)
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: docker/build-push-action@v6
@@ -70,8 +76,8 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ github.sha }}
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ github.sha }}
+          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: true
           sbom: true
           push: true
@@ -88,27 +94,23 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ github.sha }}
+          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: true
           sbom: true
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
-      - name: Prune stale GHA build caches (branch-scoped, preserve current commit)
+      - name: Prune caches (delete different-hash always; same-hash if age >= 14d)
         uses: actions/github-script@v8
-        # Note: we DO NOT skip this step for manual runs — it will remove stale caches for the branch.
         with:
           script: |
-            // Inputs from the reusable workflow
-            const variant = '${{ inputs.variant }}';
-            const version = '${{ inputs.version }}';
-            
-            // Owner / repo
+            const variant = "${{ matrix.variant }}";
+            const version = "${{ matrix.version }}";
             const owner = context.repo.owner;
-            const repo = context.repo.repo; // same as github.event.repository.name
+            const repo = context.repo.repo;
             
-            // Compute ref_name (behaves like ${{ github.ref_name }})
+            // compute ref_name (same behaviour as ${{ github.ref_name }})
             function getRefName(ctx) {
               if (ctx.ref_name) return ctx.ref_name;
               if (!ctx.ref) return '';
@@ -118,21 +120,25 @@ jobs:
             }
             const refName = getRefName(context);
             
-            // Current commit SHAs
-            const sha = context.sha || process.env.GITHUB_SHA || '';
-            const shortSha = (sha || '').slice(0, 7);
+            // scope hash produced by the compute_hash step (must match build's hashFiles expression)
+            const scopeHash = "${{ steps.compute_hash.outputs.scope_hash }}";
+            const shortScopeHash = (scopeHash || '').slice(0, 7);
             
-            // Scope prefix format you use when caching:
-            // `${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-`
+            // prefix to narrow caches to this repo+variant+version+branch
             const scopePrefix = `${repo}-${variant}-${version}-${refName}-`;
             
-            console.log(`Prune-run: owner=${owner} repo=${repo} variant=${variant} version=${version}`);
-            console.log(`Ref: ${refName}   SHA: ${sha} (short ${shortSha})`);
-            console.log(`Targeting cache keys that include prefix: "${scopePrefix}"`);
-            console.log('Preserving any cache that matches the current commit SHA (full or short)');
+            // TTL threshold: 14 days (delete same-hash caches if age >= this)
+            const DAYS = 14;
+            const AGE_MS = DAYS * 24 * 60 * 60 * 1000;
+            const now = Date.now();
             
-            // helpers
+            console.log(`Prune-run for combo: ${variant}/${version} on branch ${refName}`);
+            console.log(`Using scope prefix: "${scopePrefix}"`);
+            console.log(`Current scope hash: ${scopeHash} (short ${shortScopeHash})`);
+            console.log(`Deleting caches that don't match current hash; deleting same-hash caches when age >= ${DAYS} days.`);
+            
             const sleep = ms => new Promise(r => setTimeout(r, ms));
+            
             async function fetchCaches(page = 1) {
               return github.rest.actions.getActionsCacheList({
                 owner,
@@ -145,10 +151,10 @@ jobs:
             }
             
             let page = 1;
+            let examined = 0;
             let deleted = 0;
-            let seenAny = false;
+            let foundAny = false;
             
-            // iterate pages of caches
             while (true) {
               let res;
               try {
@@ -158,60 +164,79 @@ jobs:
                 await sleep(5000);
                 try { res = await fetchCaches(page); }
                 catch (err2) {
-                  core.error(`Failed again to list caches (page ${page}): ${err2?.message || err2}. Aborting prune.`);
+                  core.error(`Failed again to list caches (page ${page}): ${err2?.message || err2}. Aborting prune for this combo.`);
                   break;
                 }
               }
             
               const caches = res?.data?.actions_caches ?? [];
-              if (!caches.length) break; // no more pages
+              if (!caches.length) break;
+              foundAny = true;
             
-              seenAny = true;
               for (const cache of caches) {
                 const cacheKey = String(cache.key || '');
             
-                // only consider caches belonging to this exact repo+variant+version+ref group
-                if (!cacheKey.includes(scopePrefix)) {
-                  continue;
+                // narrow to this repo/variant/version/branch group
+                if (!cacheKey.includes(scopePrefix)) continue;
+                examined++;
+            
+                // created_at only (user requested)
+                const createdAtStr = cache.created_at;
+                const createdAt = createdAtStr ? Date.parse(createdAtStr) : null;
+                const ageMs = createdAt ? (now - createdAt) : null;
+                const ageDays = ageMs ? (ageMs / (1000*60*60*24)) : null;
+            
+                const isSameFull = scopeHash && cacheKey.endsWith(`${scopeHash}`);
+                const isSameShort = shortScopeHash && cacheKey.endsWith(`-${shortScopeHash}`);
+                const isSameHash = isSameFull || isSameShort;
+            
+                // Rule:
+                // - if NOT same-hash => delete immediately (regardless of created_at)
+                // - if same-hash => delete only if created_at exists AND age >= DAYS (i.e., ageMs >= AGE_MS)
+                //   if created_at missing/unparseable treat as stale and delete
+                if (!isSameHash) {
+                  console.log(`Deleting (different-hash): id=${cache.id} key="${cacheKey}"`);
+                } else {
+                  // same-hash
+                  if (!createdAt) {
+                    console.log(`Deleting (same-hash but missing/unparseable created_at): id=${cache.id} key="${cacheKey}"`);
+                  } else if (ageMs >= AGE_MS) {
+                    console.log(`Deleting (same-hash, age ${Math.floor(ageDays)}d >= ${DAYS}d): id=${cache.id} key="${cacheKey}"`);
+                  } else {
+                    console.log(`Keeping (same-hash, age ${ageDays.toFixed(2)}d < ${DAYS}d): id=${cache.id} key="${cacheKey}"`);
+                    continue; // keep
+                  }
                 }
             
-                // preserve cache(s) that correspond to this exact commit (full or short sha)
-                const isCurrentFull = sha && cacheKey.includes(sha);
-                const isCurrentShort = shortSha && cacheKey.includes(shortSha);
-                if (isCurrentFull || isCurrentShort) {
-                  console.log(`Preserve: cache id=${cache.id} key="${cacheKey}" (matches current commit)`);
-                  continue;
-                }
-            
-                // delete everything else that matches the scopePrefix (same refName + same variant/version but different commit)
+                // perform delete
                 try {
-                  console.log(`Deleting: cache id=${cache.id} key="${cacheKey}"`);
                   await github.rest.actions.deleteActionsCacheById({
                     owner,
                     repo,
                     cache_id: cache.id,
                   });
                   deleted++;
-                  // mild per-delete delay
+                  // polite per-delete pause
                   await sleep(800);
                 } catch (delErr) {
                   core.warning(`Failed to delete cache id=${cache.id}: ${delErr?.message || delErr}`);
                   if (delErr && delErr.status === 403) {
-                    core.warning('Received 403 - likely rate-limited. Backing off 30s.');
+                    core.warning('Rate limited (403) — backing off 30s');
                     await sleep(30000);
                   } else {
                     await sleep(2000);
                   }
-                  // continue deleting remaining caches
                 }
-              } // end caches loop
+              } // end for caches in page
             
+              // if less than page size, we're at the end
+              if (caches.length < 100) break;
               page++;
-              // short pause between pages to be polite to API
               await sleep(900);
             } // end paging
             
-            if (!seenAny) {
-              console.log(`No caches found in repo ${repo} (or none returned by list API).`);
+            if (!foundAny) {
+              console.log(`No caches found matching prefix "${scopePrefix}".`);
+            } else {
+              console.log(`Examined ${examined} caches for ${variant}/${version} on ${refName}. Deleted ${deleted}.`);
             }
-            console.log(`Prune complete. Deleted ${deleted} cache(s) for scope prefix "${scopePrefix}".`);
