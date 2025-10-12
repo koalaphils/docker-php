@@ -128,7 +128,7 @@ jobs:
             const scopePrefix = `${repo}-${variant}-${version}-${refName}-`;
             
             // TTL threshold: 14 days (delete same-hash caches if age >= this)
-            const DAYS = 14;
+            const DAYS = 7;
             const AGE_MS = DAYS * 24 * 60 * 60 * 1000;
             const now = Date.now();
             
