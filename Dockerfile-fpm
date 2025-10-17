@@ -55,6 +55,7 @@ RUN set -eux; \
         `apt-cache pkgnames libmagickwand | grep headers | sort | head -1` \
         `apt-cache pkgnames libmcrypt | sort -V | head -1` \
         `apt-cache pkgnames libmemcache | sort -V | head -1` \
+        `apt-cache pkgnames libmongo | sort -V | head -1` \
         `apt-cache pkgnames libmsgpack | sort -V | head -1` \
         `apt-cache pkgnames libpng | sort -V | head -1` \
         `apt-cache pkgnames libsqlite3 | sort -V | head -1` \
@@ -85,6 +86,7 @@ RUN set -eux; \
         `apt-cache pkgnames libfreetype | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libjpeg | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libmcrypt | grep dev | sort | head -1` \
+        `apt-cache pkgnames libmongo | grep dev | sort | head -1` \
         `apt-cache pkgnames libsqlite3 | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libwebp | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libxsl | grep dev | sort -V | head -1` \
@@ -156,21 +158,25 @@ RUN set -eux; \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
     pie install --skip-enable-extension apcu/apcu  && \
     pie install --skip-enable-extension imagick/imagick && \
+    pie install --skip-enable-extension mongodb/mongodb-extension && \
     pie install --skip-enable-extension nikic/php-ast  && \
     pie install --skip-enable-extension osmanov/pecl-ev  && \
     pie install --skip-enable-extension pecl/mcrypt  && \
+    pie install --skip-enable-extension pecl/parallel  && \
     pie install --skip-enable-extension pecl/pcov  && \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
     pie install --skip-enable-extension swoole/swoole  && \
     pie install --skip-enable-extension xdebug/xdebug  && \
     docker-php-ext-enable apcu \
-      imagick \
       ast \
       ev \
+      imagick \
       mcrypt \
-      pcov \
       memcached \
+      mongodb \
+      parallel \
+      pcov \
       redis \
       swoole \
       xdebug ; \
@@ -196,6 +202,7 @@ RUN set -eux; \
     \
 # smoke test \
     php -m; \
+    pie show --all; \
 # remove all extensions by default except for igbinary and msgpack \
     rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
     rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \

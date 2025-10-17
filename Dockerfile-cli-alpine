@@ -45,6 +45,7 @@ RUN set -eux; \
         libwebp \
         libxslt \
         libzip \
+        mongo-c-driver \
         msgpack-c \
         musl \
         sqlite-libs \
@@ -70,6 +71,7 @@ RUN set -eux; \
         libxslt-dev \
         libzip-dev \
         linux-headers \
+        mongo-c-driver-dev \
         msgpack-c-dev \
         musl-dev \
         openssl-dev \
@@ -140,21 +142,25 @@ RUN set -eux; \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
     pie install --skip-enable-extension apcu/apcu  && \
     pie install --skip-enable-extension imagick/imagick && \
+    pie install --skip-enable-extension mongodb/mongodb-extension && \
     pie install --skip-enable-extension nikic/php-ast  && \
     pie install --skip-enable-extension osmanov/pecl-ev  && \
     pie install --skip-enable-extension pecl/mcrypt  && \
+    pie install --skip-enable-extension pecl/parallel  && \
     pie install --skip-enable-extension pecl/pcov  && \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
     pie install --skip-enable-extension swoole/swoole  && \
     pie install --skip-enable-extension xdebug/xdebug  && \
     docker-php-ext-enable apcu \
-      imagick \
       ast \
       ev \
+      imagick \
       mcrypt \
-      pcov \
       memcached \
+      mongodb \
+      parallel \
+      pcov \
       redis \
       swoole \
       xdebug ; \
@@ -176,6 +182,7 @@ RUN set -eux; \
 	\
 # smoke test
 	php -m; \
+    pie show --all; \
 # remove all extensions by default except for igbinary and msgpack \
     rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
     rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
