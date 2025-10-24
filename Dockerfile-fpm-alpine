@@ -146,7 +146,6 @@ RUN set -eux; \
     pie install --skip-enable-extension nikic/php-ast  && \
     pie install --skip-enable-extension osmanov/pecl-ev  && \
     pie install --skip-enable-extension pecl/mcrypt  && \
-    pie install --skip-enable-extension pecl/parallel  && \
     pie install --skip-enable-extension pecl/pcov  && \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
@@ -159,12 +158,13 @@ RUN set -eux; \
       mcrypt \
       memcached \
       mongodb \
-      parallel \
       pcov \
       redis \
       swoole \
       xdebug ; \
     \
+# check all installed extensions \
+    pie show --all; \
 # Cleanup \
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
@@ -180,12 +180,12 @@ RUN set -eux; \
 	pecl update-channels; \
 	rm -rf /tmp/pear ~/.pearrc; \
 	\
-# smoke test
-	php -m; \
-    pie show --all; \
 # remove all extensions by default except for igbinary and msgpack \
     rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
     rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
+# smoke test
+	php -m; \
+    pie show --all; \
 # re-enable default extensions by official image \
     docker-php-ext-enable sodium opcache; \
 # copy envsubst for easier use in entrypoint scripts \

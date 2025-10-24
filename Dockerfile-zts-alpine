@@ -161,6 +161,8 @@ RUN set -eux; \
       swoole \
       xdebug ; \
     \
+# check all installed extensions \
+    pie show --all; \
 # Cleanup \
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
@@ -176,12 +178,12 @@ RUN set -eux; \
 	pecl update-channels; \
 	rm -rf /tmp/pear ~/.pearrc; \
 	\
-# smoke test
-	php -m; \
-    pie show --all; \
 # remove all extensions by default except for igbinary and msgpack \
     rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
     rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
+# smoke test
+	php -m; \
+    pie show --all; \
 # re-enable default extensions by official image \
     docker-php-ext-enable sodium opcache; \
 # copy envsubst for easier use in entrypoint scripts \
