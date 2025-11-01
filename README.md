@@ -3,6 +3,7 @@
 PHP docker images preinstalled with commonly used extensions
 
 Preinstalled extensions apart from the ones provided by the official PHP images:
+- amqp
 - apcu
 - ast
 - bcmath
@@ -12,6 +13,7 @@ Preinstalled extensions apart from the ones provided by the official PHP images:
 - igbinary
 - imagick
 - intl
+- jsonpath
 - mcrypt
 - memcached
 - mongodb

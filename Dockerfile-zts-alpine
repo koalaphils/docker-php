@@ -44,6 +44,7 @@ RUN set -eux; \
         mongo-c-driver \
         msgpack-c \
         musl \
+        rabbitmq-c \
         sqlite-libs \
         unixodbc \
         zlib \
@@ -71,6 +72,7 @@ RUN set -eux; \
         msgpack-c-dev \
         musl-dev \
         openssl-dev \
+        rabbitmq-c-dev \
         sqlite-dev \
         unixodbc-dev \
         zlib-dev \
@@ -96,6 +98,13 @@ RUN set -eux; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
         docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
+    pecl install --onlyreqdeps --nobuild amqp; \
+        cd "$(pecl config-get temp_dir)/amqp"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+        docker-php-ext-enable amqp; \
     pecl install --onlyreqdeps --nobuild sqlsrv; \
         cd "$(pecl config-get temp_dir)/sqlsrv"; \
         phpize; \
@@ -141,17 +150,22 @@ RUN set -eux; \
     pie install --skip-enable-extension mongodb/mongodb-extension && \
     pie install --skip-enable-extension nikic/php-ast  && \
     pie install --skip-enable-extension osmanov/pecl-ev  && \
+#    pie install --skip-enable-extension pdezwart/php-amqp && \
     pie install --skip-enable-extension pecl/mcrypt  && \
     pie install --skip-enable-extension pecl/parallel  && \
     pie install --skip-enable-extension pecl/pcov  && \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
+    pie install --skip-enable-extension supermetrics/jsonpath && \
     pie install --skip-enable-extension swoole/swoole  && \
     pie install --skip-enable-extension xdebug/xdebug  && \
-    docker-php-ext-enable apcu \
+    docker-php-ext-enable  \
+#      amqp \
+      apcu \
       ast \
       ev \
       imagick \
+      jsonpath \
       mcrypt \
       memcached \
       mongodb \

@@ -58,6 +58,7 @@ RUN set -eux; \
         `apt-cache pkgnames libmongo | sort -V | head -1` \
         `apt-cache pkgnames libmsgpack | sort -V | head -1` \
         `apt-cache pkgnames libpng | sort -V | head -1` \
+        `apt-cache pkgnames librabbitmq | sort -V | head -1` \
         `apt-cache pkgnames libsqlite3 | sort -V | head -1` \
         `apt-cache pkgnames libwebp | sort -V | head -1` \
         `apt-cache pkgnames libxsl | grep -v dev | sort -V | head -1` \
@@ -87,6 +88,7 @@ RUN set -eux; \
         `apt-cache pkgnames libjpeg | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libmcrypt | grep dev | sort | head -1` \
         `apt-cache pkgnames libmongo | grep dev | sort | head -1` \
+        `apt-cache pkgnames librabbitmq | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libsqlite3 | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libwebp | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libxsl | grep dev | sort -V | head -1` \
@@ -116,6 +118,13 @@ RUN set -eux; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
         docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
+    pecl install --onlyreqdeps --nobuild amqp; \
+        cd "$(pecl config-get temp_dir)/amqp"; \
+        phpize; \
+        ./configure; \
+        make && make test && make install && make clean || exit 1; \
+        cd -; \
+        docker-php-ext-enable amqp; \
     pecl install --onlyreqdeps --nobuild sqlsrv; \
         cd "$(pecl config-get temp_dir)/sqlsrv"; \
         phpize; \
@@ -161,16 +170,21 @@ RUN set -eux; \
     pie install --skip-enable-extension mongodb/mongodb-extension && \
     pie install --skip-enable-extension nikic/php-ast  && \
     pie install --skip-enable-extension osmanov/pecl-ev  && \
+#    pie install --skip-enable-extension pdezwart/php-amqp && \
     pie install --skip-enable-extension pecl/mcrypt  && \
     pie install --skip-enable-extension pecl/pcov  && \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
+    pie install --skip-enable-extension supermetrics/jsonpath && \
     pie install --skip-enable-extension swoole/swoole  && \
     pie install --skip-enable-extension xdebug/xdebug  && \
-    docker-php-ext-enable apcu \
+    docker-php-ext-enable  \
+#      amqp \
+      apcu \
       ast \
       ev \
       imagick \
+      jsonpath \
       mcrypt \
       memcached \
       mongodb \
