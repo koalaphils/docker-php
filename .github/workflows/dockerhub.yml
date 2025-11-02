@@ -20,6 +20,8 @@ jobs:
       packages: write
       pull-requests: write
       actions: write
+      id-token: write
+      attestations: write
     strategy:
       max-parallel: 7
       matrix:

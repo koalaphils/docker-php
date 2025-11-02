@@ -22,6 +22,8 @@ jobs:
       actions: write
       contents: read
       pull-requests: write
+      id-token: write
+      attestations: write
     steps:
       # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Repo
@@ -67,6 +69,7 @@ jobs:
           # Use the same hashFiles() pattern you used in your build step.
           echo "scope_hash=${{ hashFiles(format('Dockerfile-{0}', inputs.variant)) }}" >> $GITHUB_OUTPUT
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (use cache)
+        id: build_cached
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: docker/build-push-action@v6
         with:
@@ -85,6 +88,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (no cache)
+        id: build_uncached
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: docker/build-push-action@v6
         with:
@@ -95,12 +99,32 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
-          provenance: true
+          provenance: mode=max
           sbom: true
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
+      - name: Resolve build digest
+        id: resolve_digest
+        run: |
+          if [ -n "${{ steps.build_cached.outputs.digest }}" ]; then
+            echo "digest=${{ steps.build_cached.outputs.digest }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "digest=${{ steps.build_uncached.outputs.digest }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/php
+          subject-digest: ${{ steps.resolve_digest.outputs.digest }}
+          push-to-registry: true
+      - name: Publish attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: docker.io/${{ github.repository_owner }}/php
+          subject-digest: ${{ steps.resolve_digest.outputs.digest }}
+          push-to-registry: true
       - name: Prune caches (delete different-hash always; same-hash if age >= 14d)
         uses: actions/github-script@v8
         with:
