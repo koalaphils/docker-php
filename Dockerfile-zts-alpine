@@ -173,7 +173,7 @@ RUN set -eux; \
       pcov \
       redis \
       swoole \
-      xdebug ; \
+      xdebug  || { echo "Could not enable some extensions"; exit 1; }; \
     \
 # check all installed extensions \
     pie show --all; \
