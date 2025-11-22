@@ -1,8 +1,5 @@
 ARG PHP_VERSION=8
 FROM php:${PHP_VERSION}-cli
-LABEL org.opencontainers.image.description="PHP base image with commonly used extensions pre-installed" \
-     "com.koalaphils.vendor"="Koala Software Technology Innovations" \
-     "com.koalaphils.image.author"="mdprotacio@outlook.com"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV COMPOSER_ALLOW_SUPERUSER=1

@@ -41,6 +41,17 @@ jobs:
             type=schedule,pattern={{date 'YYYYMMDD'}},prefix=${{ inputs.version }}-${{ inputs.variant }}-
             type=raw,prefix=8-,value=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
             type=raw,value=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
+          labels: |
+            org.opencontainers.image.title=PHP ${{ inputs.version }} ${{ inputs.variant }}
+            org.opencontainers.image.description=PHP ${{ inputs.version }} ${{ inputs.variant }} preinstalled with various extensions
+            org.opencontainers.image.vendor=Koala Software Technology Innovations
+            org.opencontainers.image.url=https://github.com/koalaphils
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ inputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.base.name=docker.io/library/php:${{ inputs.version }}-${{ inputs.variant }}
+            org.opencontainers.image.licenses=GNU GPLv3
+            org.opencontainers.image.authors=Melvin D. Protacio <mdprotacio@outlook.com>
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
