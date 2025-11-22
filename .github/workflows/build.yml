@@ -90,8 +90,8 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
-          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-from: type=gha
+          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: true
           sbom: true
           push: true
@@ -109,7 +109,7 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ inputs.variant }}-${{ inputs.version }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: mode=max
           sbom: true
           push: true
@@ -160,7 +160,7 @@ jobs:
             const shortScopeHash = (scopeHash || '').slice(0, 7);
             
             // prefix to narrow caches to this repo+variant+version+branch
-            const scopePrefix = `${repo}-${variant}-${version}-${refName}-`;
+            const scopePrefix = `${repo}-${refName}-`;
             
             // TTL threshold: 14 days (delete same-hash caches if age >= this)
             const DAYS = 7;
