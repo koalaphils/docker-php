@@ -10,10 +10,6 @@ ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 
-# Dependencies for building PHP extensions
-# Add dependencies for PIE
-ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 make"
-
 # Install dependencies
 RUN set -eux; \
     apk update && \

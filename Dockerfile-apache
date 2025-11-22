@@ -11,10 +11,6 @@ ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-essential gcc git libtoo
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 
-# Dependencies for building PHP extensions
-# Add dependencies for PIE
-ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-essential gcc git libtool m4 make"
-
 # Fixes for apt-get hash sum mismatch errors
 RUN { \
       echo 'Acquire::Retries "5";'; \
