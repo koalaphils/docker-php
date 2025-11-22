@@ -42,12 +42,12 @@ jobs:
             type=raw,prefix=8-,value=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
             type=raw,value=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
           labels: |
-            org.opencontainers.image.title=PHP ${{ inputs.version }} ${{ inputs.variant }}
-            org.opencontainers.image.description=PHP ${{ inputs.version }} ${{ inputs.variant }} preinstalled with various extensions
+            org.opencontainers.image.title=PHP${{ inputs.version }} ${{ inputs.variant }}
+            org.opencontainers.image.description=PHP${{ inputs.version }} ${{ inputs.variant }} preinstalled with various extensions
             org.opencontainers.image.vendor=Koala Software Technology Innovations
-            org.opencontainers.image.url=https://github.com/koalaphils
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.version=${{ inputs.version }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}/blob/${{ github.head_ref || github.ref_name }}/Dockerfile-${{ inputs.variant }}
+            org.opencontainers.image.version=${{ inputs.version }}-${{ inputs.variant }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.base.name=docker.io/library/php:${{ inputs.version }}-${{ inputs.variant }}
             org.opencontainers.image.licenses=GNU GPLv3
