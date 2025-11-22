@@ -23,16 +23,16 @@ jobs:
       id-token: write
       attestations: write
     strategy:
-      max-parallel: 4
+      max-parallel: 8
       matrix:
         variant:
           - cli
-          - zts
           - cli-alpine
-          - zts-alpine
           - fpm
           - fpm-alpine
           - apache
+          - zts
+          - zts-alpine
         version:
           - '8.4'
           - '8.3'
