@@ -23,21 +23,21 @@ jobs:
       id-token: write
       attestations: write
     strategy:
-      max-parallel: 7
+      max-parallel: 4
       matrix:
+        variant:
+          - cli
+          - zts
+          - cli-alpine
+          - zts-alpine
+          - fpm
+          - fpm-alpine
+          - apache
         version:
           - '8.4'
           - '8.3'
           - '8.2'
           - '8.1'
-        variant:
-          - cli-alpine
-          - fpm-alpine
-          - zts-alpine
-          - cli
-          - fpm
-          - zts
-          - apache
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
