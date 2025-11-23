@@ -6,9 +6,13 @@ FROM php:${PHP_VERSION}-cli-alpine AS builder
 ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 make"
 
 # Copy PIE and Composer binaries
+ENV COMPOSER_ALLOW_SUPERUSER=1
+COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 
 RUN set -eux; \
+# Disable github api on composer \
+    composer config --global use-github-api false; \
     apk update && \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \

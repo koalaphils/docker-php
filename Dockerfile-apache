@@ -7,10 +7,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-essential gcc git libtool m4 make"
 
 # Copy PIE and Composer binaries
+ENV COMPOSER_ALLOW_SUPERUSER=1
+COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 
 # Install PHP extension build dependencies
 RUN set -eux; \
+# Disable github api on composer \
+    composer config --global use-github-api false; \
     savedAptMark="$(apt-mark showmanual)"; \
     apt-get -o Acquire::ForceIPv4=true update && \
     apt-get install -y --no-install-recommends \
