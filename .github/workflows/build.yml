@@ -32,6 +32,14 @@ jobs:
       # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Repo
         uses: actions/checkout@v5
+      - name: Set semver tags
+        id: semver
+        run: |
+          VERSION="${{ inputs.version }}"  # passed to your reusable workflow
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+          echo "patch=$PATCH" >> $GITHUB_OUTPUT
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -40,10 +48,9 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/php
             ${{ github.repository_owner }}/php
           tags: |
-            type=raw,value=,prefix=${{ inputs.version }}-${{ inputs.variant }}
-            type=sha,format=short,prefix=${{ inputs.version }}-${{ inputs.variant }}-
-            type=schedule,pattern={{date 'YYYYMMDD'}},prefix=${{ inputs.version }}-${{ inputs.variant }}-
-            type=raw,prefix=8-,value=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
+            type=raw,value=,prefix=${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}.${{ steps.semver.outputs.patch || 0 }}-${{ inputs.variant }}
+            type=raw,value=,prefix=${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}-${{ inputs.variant }}
+            type=raw,value=,prefix=${{ steps.semver.outputs.major }}-${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
             type=raw,value=${{ inputs.variant }},enable=${{ inputs.version == inputs.latest }}
           labels: |
             org.opencontainers.image.title=PHP${{ inputs.version }} ${{ inputs.variant }}
@@ -85,7 +92,7 @@ jobs:
           echo "scope_hash=${{ hashFiles(format('Dockerfile-*', inputs.variant)) }}" >> $GITHUB_OUTPUT
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (use cache)
         id: build_cached
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.push }}
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -96,7 +103,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
-          provenance: true
+          provenance: mode=max
           sbom: true
           push: ${{ inputs.push }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -104,7 +111,7 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (no cache)
         id: build_uncached
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.push }}
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -129,18 +136,21 @@ jobs:
             echo "digest=${{ steps.build_uncached.outputs.digest }}" >> "$GITHUB_OUTPUT"
           fi
       - name: Publish attestation
+        if: ${{ inputs.push }}
         uses: actions/attest-build-provenance@v3
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/php
           subject-digest: ${{ steps.resolve_digest.outputs.digest }}
           push-to-registry: ${{ inputs.push }}
       - name: Publish attestation
+        if: ${{ inputs.push }}
         uses: actions/attest-build-provenance@v3
         with:
           subject-name: docker.io/${{ github.repository_owner }}/php
           subject-digest: ${{ steps.resolve_digest.outputs.digest }}
           push-to-registry: ${{ inputs.push }}
       - name: Prune caches (delete different-hash always; same-hash if age >= 14d)
+        if: ${{ inputs.push }}
         uses: actions/github-script@v8
         with:
           script: |

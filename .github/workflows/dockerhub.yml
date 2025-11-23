@@ -12,44 +12,36 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+  actions: write
+  id-token: write
+  attestations: write
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   base-version:
-    permissions:
-      contents: read
-      packages: write
-      pull-requests: write
-      actions: write
-      id-token: write
-      attestations: write
     strategy:
       max-parallel: 8
       matrix:
         variant:
           - cli
           - cli-alpine
-          - zts
-          - zts-alpine
         version:
-          - '8.4'
-          - '8.3'
-          - '8.2'
-          - '8.1'
+          - '8.4.15'
+          - '8.3.28'
+          - '8.2.29'
+          - '8.1.33'
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
-      latest: '8.4'
+      latest: '8.4.15'
   build-fpm-apache-versions:
     needs: base-version
-    permissions:
-      contents: read
-      packages: write
-      pull-requests: write
-      actions: write
-      id-token: write
-      attestations: write
     strategy:
       max-parallel: 8
       matrix:
@@ -57,26 +49,21 @@ jobs:
           - fpm
           - fpm-alpine
           - apache
+          - zts
+          - zts-alpine
         version:
-          - '8.4'
-          - '8.3'
-          - '8.2'
-          - '8.1'
+          - '8.4.15'
+          - '8.3.28'
+          - '8.2.29'
+          - '8.1.33'
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
-      latest: '8.4'
+      latest: '8.4.15'
   build-push-versions:
     needs: build-fpm-apache-versions
-    permissions:
-      contents: read
-      packages: write
-      pull-requests: write
-      actions: write
-      id-token: write
-      attestations: write
     strategy:
       matrix:
         variant:
@@ -88,14 +75,14 @@ jobs:
           - fpm-alpine
           - apache
         version:
-          - '8.4'
-          - '8.3'
-          - '8.2'
-          - '8.1'
+          - '8.4.15'
+          - '8.3.28'
+          - '8.2.29'
+          - '8.1.33'
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
-      latest: '8.4'
+      latest: '8.4.15'
       push: true
