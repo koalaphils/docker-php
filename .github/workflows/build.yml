@@ -78,7 +78,7 @@ jobs:
         run: |
           # This step only echoes the expression into an output, evaluated by Actions
           # Use the same hashFiles() pattern you used in your build step.
-          echo "scope_hash=${{ hashFiles(format('Dockerfile-{0}', inputs.variant)) }}" >> $GITHUB_OUTPUT
+          echo "scope_hash=${{ hashFiles(format('Dockerfile-*', inputs.variant)) }}" >> $GITHUB_OUTPUT
       - name: Build PHP ${{ inputs.version }} ${{ inputs.variant }} (use cache)
         id: build_cached
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -90,8 +90,8 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: true
           sbom: true
           push: true
@@ -109,7 +109,7 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-to: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
           provenance: mode=max
           sbom: true
           push: true

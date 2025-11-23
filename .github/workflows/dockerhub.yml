@@ -14,7 +14,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build-versions:
+  base-version:
     permissions:
       contents: read
       packages: write
@@ -28,11 +28,34 @@ jobs:
         variant:
           - cli
           - cli-alpine
+          - zts
+          - zts-alpine
+        version:
+          - '8.4'
+          - '8.3'
+          - '8.2'
+          - '8.1'
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      version: ${{ matrix.version }}
+      variant: ${{ matrix.variant }}
+      latest: '8.4'
+  build-versions:
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
+      actions: write
+      id-token: write
+      attestations: write
+    strategy:
+      max-parallel: 8
+      matrix:
+        variant:
           - fpm
           - fpm-alpine
           - apache
-          - zts
-          - zts-alpine
         version:
           - '8.4'
           - '8.3'
