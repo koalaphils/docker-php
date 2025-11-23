@@ -150,7 +150,6 @@ jobs:
           subject-digest: ${{ steps.resolve_digest.outputs.digest }}
           push-to-registry: ${{ inputs.push }}
       - name: Prune caches (delete different-hash always; same-hash if age >= 14d)
-        if: ${{ inputs.push }}
         uses: actions/github-script@v8
         with:
           script: |
@@ -235,9 +234,7 @@ jobs:
                 const ageMs = createdAt ? (now - createdAt) : null;
                 const ageDays = ageMs ? (ageMs / (1000*60*60*24)) : null;
             
-                const isSameFull = scopeHash && cacheKey.includes(`-${scopeHash}-`);
-                const isSameShort = shortScopeHash && cacheKey.includes(`-${shortScopeHash}-`);
-                const isSameHash = isSameFull || isSameShort;
+                const isSameHash = scopeHash && cacheKey.includes(`${scopeHash}`);
             
                 // Rule:
                 // - if NOT same-hash => delete immediately (regardless of created_at)
