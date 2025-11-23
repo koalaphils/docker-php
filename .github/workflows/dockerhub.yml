@@ -42,6 +42,7 @@ jobs:
       variant: ${{ matrix.variant }}
       latest: '8.4'
   build-versions:
+    needs: base-version
     permissions:
       contents: read
       packages: write
