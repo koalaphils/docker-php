@@ -78,12 +78,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to AWS ECR
-        uses: docker/login-action@v3
-        with:
-          registry: public.ecr.aws
-          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       - name: Compute scope hash for this combo
         id: compute_hash
         run: |
@@ -101,8 +95,8 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-from: type=gha,scope=${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,mode=max,scope=${{ steps.compute_hash.outputs.scope_hash }}
           provenance: mode=max
           sbom: true
           push: ${{ inputs.push }}
@@ -120,7 +114,7 @@ jobs:
             PHP_VERSION=${{ inputs.version }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-to: type=gha,mode=max,scope=${{ github.event.repository.name }}-${{ github.ref_name }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-to: type=gha,mode=max,scope=${{ steps.compute_hash.outputs.scope_hash }}
           provenance: mode=max
           sbom: true
           push: ${{ inputs.push }}
@@ -149,140 +143,3 @@ jobs:
           subject-name: docker.io/${{ github.repository_owner }}/php
           subject-digest: ${{ steps.resolve_digest.outputs.digest }}
           push-to-registry: ${{ inputs.push }}
-      - name: Prune caches (delete different-hash always; same-hash if age >= 14d)
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const variant = "${{ inputs.variant }}";
-            const version = "${{ inputs.version }}";
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            
-            // compute ref_name (same behaviour as ${{ github.ref_name }})
-            function getRefName(ctx) {
-              if (ctx.ref_name) return ctx.ref_name;
-              if (!ctx.ref) return '';
-              const parts = ctx.ref.split('/');
-              if (parts[0] === 'refs' && parts[1] === 'heads') return parts.slice(2).join('/');
-              return parts.slice(2).join('/');
-            }
-            const refName = getRefName(context);
-            
-            // scope hash produced by the compute_hash step (must match build's hashFiles expression)
-            const scopeHash = "${{ steps.compute_hash.outputs.scope_hash }}";
-            const shortScopeHash = (scopeHash || '').slice(0, 7);
-            
-            // prefix to narrow caches to this repo+variant+version+branch
-            const scopePrefix = `${repo}-${refName}-`;
-            
-            // TTL threshold: 14 days (delete same-hash caches if age >= this)
-            const DAYS = 7;
-            const AGE_MS = DAYS * 24 * 60 * 60 * 1000;
-            const now = Date.now();
-            
-            console.log(`Prune-run for combo: ${variant}/${version} on branch ${refName}`);
-            console.log(`Using scope prefix: "${scopePrefix}"`);
-            console.log(`Current scope hash: ${scopeHash} (short ${shortScopeHash})`);
-            console.log(`Deleting caches that don't match current hash; deleting same-hash caches when age >= ${DAYS} days.`);
-            
-            const sleep = ms => new Promise(r => setTimeout(r, ms));
-            
-            async function fetchCaches(page = 1) {
-              return github.rest.actions.getActionsCacheList({
-                owner,
-                repo,
-                per_page: 100,
-                page,
-                sort: 'created_at',
-                direction: 'asc',
-              });
-            }
-            
-            let page = 1;
-            let examined = 0;
-            let deleted = 0;
-            let foundAny = false;
-            
-            while (true) {
-              let res;
-              try {
-                res = await fetchCaches(page);
-              } catch (err) {
-                core.warning(`Failed to list caches (page ${page}): ${err?.message || err}. Retrying after 5s`);
-                await sleep(5000);
-                try { res = await fetchCaches(page); }
-                catch (err2) {
-                  core.error(`Failed again to list caches (page ${page}): ${err2?.message || err2}. Aborting prune for this combo.`);
-                  break;
-                }
-              }
-            
-              const caches = res?.data?.actions_caches ?? [];
-              if (!caches.length) break;
-              foundAny = true;
-            
-              for (const cache of caches) {
-                const cacheKey = String(cache.key || '');
-            
-                // narrow to this repo/variant/version/branch group
-                if (!cacheKey.includes(scopePrefix)) continue;
-                examined++;
-            
-                // created_at only (user requested)
-                const createdAtStr = cache.created_at;
-                const createdAt = createdAtStr ? Date.parse(createdAtStr) : null;
-                const ageMs = createdAt ? (now - createdAt) : null;
-                const ageDays = ageMs ? (ageMs / (1000*60*60*24)) : null;
-            
-                const isSameHash = scopeHash && cacheKey.includes(`${scopeHash}`);
-            
-                // Rule:
-                // - if NOT same-hash => delete immediately (regardless of created_at)
-                // - if same-hash => delete only if created_at exists AND age >= DAYS (i.e., ageMs >= AGE_MS)
-                //   if created_at missing/unparseable treat as stale and delete
-                if (!isSameHash) {
-                  console.log(`Deleting (different-hash): id=${cache.id} key="${cacheKey}"`);
-                } else {
-                  // same-hash
-                  if (!createdAt) {
-                    console.log(`Deleting (same-hash but missing/unparseable created_at): id=${cache.id} key="${cacheKey}"`);
-                  } else if (ageMs >= AGE_MS) {
-                    console.log(`Deleting (same-hash, age ${Math.floor(ageDays)}d >= ${DAYS}d): id=${cache.id} key="${cacheKey}"`);
-                  } else {
-                    console.log(`Keeping (same-hash, age ${ageDays.toFixed(2)}d < ${DAYS}d): id=${cache.id} key="${cacheKey}"`);
-                    continue; // keep
-                  }
-                }
-            
-                // perform delete
-                try {
-                  await github.rest.actions.deleteActionsCacheById({
-                    owner,
-                    repo,
-                    cache_id: cache.id,
-                  });
-                  deleted++;
-                  // polite per-delete pause
-                  await sleep(800);
-                } catch (delErr) {
-                  core.warning(`Failed to delete cache id=${cache.id}: ${delErr?.message || delErr}`);
-                  if (delErr && delErr.status === 403) {
-                    core.warning('Rate limited (403) — backing off 30s');
-                    await sleep(30000);
-                  } else {
-                    await sleep(2000);
-                  }
-                }
-              } // end for caches in page
-            
-              // if less than page size, we're at the end
-              if (caches.length < 100) break;
-              page++;
-              await sleep(900);
-            } // end paging
-            
-            if (!foundAny) {
-              console.log(`No caches found matching prefix "${scopePrefix}".`);
-            } else {
-              console.log(`Examined ${examined} caches for ${variant}/${version} on ${refName}. Deleted ${deleted}.`);
-            }
