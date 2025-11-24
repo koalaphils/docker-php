@@ -1,8 +1,6 @@
 ARG PHP_VERSION=8
-ARG GITHUB_TOKEN
 FROM php:${PHP_VERSION}-cli-alpine AS builder
 
-ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV COMPOSER_ALLOW_SUPERUSER=1
 # Dependencies for building PHP extensions
 # Add dependencies for PIE
@@ -13,8 +11,8 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 
-RUN set -eux; \
-# Disable github api on composer \
+# Install PHP extension build dependencies
+RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     composer config --global github-oauth.github.com $GITHUB_TOKEN; \
     apk update && \
     apk add --no-cache --virtual .build-deps \
