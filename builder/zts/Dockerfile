@@ -1,6 +1,8 @@
 ARG PHP_VERSION=8
+ARG GITHUB_TOKEN
 FROM php:${PHP_VERSION}-zts AS builder
 
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 ENV DEBIAN_FRONTEND=noninteractive
 # Dependencies for building PHP extensions
 # Add dependencies for PIE
@@ -14,7 +16,7 @@ COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 # Install PHP extension build dependencies
 RUN set -eux; \
 # Disable github api on composer \
-    composer config --global use-github-api false; \
+    composer config --global github-oauth.github.com $GITHUB_TOKEN; \
     savedAptMark="$(apt-mark showmanual)"; \
     apt-get -o Acquire::ForceIPv4=true update && \
     apt-get install -y --no-install-recommends \

@@ -25,14 +25,6 @@ jobs:
       # Checks out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Repo
         uses: actions/checkout@v5
-      - name: Set semver tags
-        id: semver
-        run: |
-          VERSION="${{ inputs.version }}"  # passed to your reusable workflow
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-          echo "major=$MAJOR" >> $GITHUB_OUTPUT
-          echo "minor=$MINOR" >> $GITHUB_OUTPUT
-          echo "patch=$PATCH" >> $GITHUB_OUTPUT
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -64,6 +56,7 @@ jobs:
           file: builder/${{ inputs.variant }}/Dockerfile
           build-args: |
             PHP_VERSION=${{ inputs.version }}
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha,scope=${{ steps.compute_hash.outputs.scope_hash }}

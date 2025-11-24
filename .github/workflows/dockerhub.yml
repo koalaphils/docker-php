@@ -24,7 +24,6 @@ permissions:
 jobs:
   base-images:
     strategy:
-      max-parallel: 8
       matrix:
         version:
           - '8.4.15'
@@ -36,7 +35,7 @@ jobs:
           - cli-alpine
           - zts
           - zts-alpine
-    uses: ./.github/workflows/pre-build.yml
+    uses: ./.github/workflows/base-build.yml
     secrets: inherit
     with:
       version: ${{ matrix.version }}
@@ -58,7 +57,7 @@ jobs:
           - fpm-alpine
           - zts
           - zts-alpine
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/image-build.yml
     secrets: inherit
     with:
       version: ${{ matrix.version }}
