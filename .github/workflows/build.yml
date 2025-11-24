@@ -1,4 +1,4 @@
-name: Reusable Workflow
+name: Final Image Builds
 
 on:
   workflow_call:
