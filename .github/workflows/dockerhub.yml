@@ -22,42 +22,42 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  builder:
+  base-images:
     strategy:
       max-parallel: 8
       matrix:
-        variant:
-          - cli
-          - cli-alpine
-          - zts
-          - zts-alpine
         version:
           - '8.4.15'
           - '8.3.28'
           - '8.2.29'
           - '8.1.33'
+        variant:
+          - cli
+          - cli-alpine
+          - zts
+          - zts-alpine
     uses: ./.github/workflows/pre-build.yml
     secrets: inherit
     with:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
-  build-push-images:
-    needs: builder
+  build-images:
+    needs: base-images
     strategy:
       matrix:
         version:
-          - '8.1.33'
-          - '8.2.29'
-          - '8.3.28'
           - '8.4.15'
+          - '8.3.28'
+          - '8.2.29'
+          - '8.1.33'
         variant:
+          - apache
           - cli
           - cli-alpine
-          - zts
-          - zts-alpine
           - fpm
           - fpm-alpine
-          - apache
+          - zts
+          - zts-alpine
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:

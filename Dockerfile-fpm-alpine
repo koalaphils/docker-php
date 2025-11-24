@@ -2,7 +2,6 @@
 ARG PHP_VERSION=8
 FROM php-${PHP_VERSION}-cli-alpine AS builder
 
-
 FROM php:${PHP_VERSION}-fpm-alpine
 # Add dependencies for PIE
 ENV PHPIZE_DEPS="${PHPIZE_DEPS} autoconf automake build-base gcc git libtool m4 make"
