@@ -34,9 +34,8 @@ RUN set -eux; \
         `apt-cache pkgnames libfreetype | sort -V | head -1` \
         `apt-cache pkgnames libicu | grep -v "java" | sort -V | head -1` \
         `apt-cache pkgnames libjpeg | sort -V | head -1` \
-        `apt-cache pkgnames libmagick | grep headers` \
-        `apt-cache pkgnames libmagickcore | grep -v "headers\|dev\|extra" | sort -V | tail -1` \
-        `apt-cache pkgnames libmagickwand | grep -v "headers\|dev" | sort -g | head -1` \
+        `apt-cache pkgnames libmagickcore | grep -v "extra\|headers\|config\|dev"` \
+        `apt-cache pkgnames libmagickwand | grep -v "extra\|headers\|config\|dev"` \
         `apt-cache pkgnames libmcrypt | sort -V | head -1` \
         `apt-cache pkgnames libmemcache | sort -V | head -1` \
         `apt-cache pkgnames libmongo | sort -V | head -1` \
