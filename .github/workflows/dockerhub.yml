@@ -11,8 +11,10 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.base_ref }}
-  cancel-in-progress: false
+  # PRs: group by PR number; non-PRs: group by branch ref
+  group: ${{ github.event_name == 'pull_request' && format('{0}-PR-{1}', github.workflow, github.event.pull_request.number) || format('{0}-{1}', github.workflow, github.ref) }}
+  # Only cancel in-progress for PRs; everything else will queue for its group
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
   packages: write
