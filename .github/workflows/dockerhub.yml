@@ -4,12 +4,10 @@ name: Build PHP Images and Push to Registries
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  pull_request:
+    branches: [ master ]
   push:
     branches: [ master ]
-  schedule:
-    - cron: 0 2 * * 2,6
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 permissions:
