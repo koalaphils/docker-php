@@ -68,3 +68,10 @@ jobs:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
       latest: '8.4.15'
+  # Add this new summary job
+  build-complete:
+    needs: build-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summary
+        run: echo "All builds completed successfully"
