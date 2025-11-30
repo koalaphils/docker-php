@@ -63,7 +63,7 @@ RUN set -eux; \
       mime_magic \
       remoteip \
       rewrite; \
-    mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
+    cp $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini \
     ; sed -i "s|^expose_php\s*=\s*\(.*\)|expose_php=Off|g" $PHP_INI_DIR/php.ini \
     ; sed -i "s|^\(;\)*realpath_cache_size\s*=\s*\(.*\)|realpath_cache_size=\2|g" $PHP_INI_DIR/php.ini \
     ; sed -i "s|^\(;\)*realpath_cache_ttl\s*=\s*\(.*\)|realpath_cache_ttl=\2|g" $PHP_INI_DIR/php.ini \
