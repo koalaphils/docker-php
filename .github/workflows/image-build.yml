@@ -95,6 +95,8 @@ jobs:
             php-${{ inputs.version }}-zts=docker-image://ghcr.io/${{ github.repository_owner }}/php:${{ inputs.version }}-zts-prebuild
             php-${{ inputs.version }}-zts-alpine=docker-image://ghcr.io/${{ github.repository_owner }}/php:${{ inputs.version }}-zts-alpine-prebuild
           builder: ${{ steps.buildx.outputs.name }}
+          cache-from: ${{ github.run_attempt == 1 && format('type=gha,scope={0}-{1}-{2}', inputs.version, inputs.variant, steps.compute_hash.outputs.scope_hash) || '' }}
+          cache-to: type=gha,mode=max,scope=${{ format('{0}-{1}-{2}', inputs.version, inputs.variant, steps.compute_hash.outputs.scope_hash) }}
           platforms: linux/amd64,linux/arm64
           provenance: mode=max
           sbom: true
