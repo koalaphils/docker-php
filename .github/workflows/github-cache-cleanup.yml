@@ -1,0 +1,56 @@
+name: Purge All GitHub Caches
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  purge-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write  # Required to delete cache entries
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Purge all caches
+        run: |
+          echo "Fetching all cache entries..."
+          
+          # Get all cache entries
+          CACHE_KEYS=$(gh cache list --limit 1000 --json key --jq '.[].key')
+          
+          if [ -z "$CACHE_KEYS" ]; then
+            echo "No cache entries found."
+            exit 0
+          fi
+          
+          # Count total caches
+          TOTAL=$(echo "$CACHE_KEYS" | wc -l)
+          echo "Found $TOTAL cache entries to delete."
+          
+          # Delete each cache entry
+          COUNTER=0
+          while IFS= read -r key; do
+            ((COUNTER++))
+            echo "[$COUNTER/$TOTAL] Deleting cache: $key"
+            gh cache delete "$key" --confirm || echo "Failed to delete $key (may already be deleted)"
+          done <<< "$CACHE_KEYS"
+          
+          echo "✅ Cache purge completed!"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Verify cache deletion
+        run: |
+          REMAINING=$(gh cache list --limit 100 --json key --jq '.[].key' | wc -l)
+          echo "Remaining cache entries: $REMAINING"
+          
+          if [ "$REMAINING" -eq 0 ]; then
+            echo "✅ All caches successfully purged!"
+          else
+            echo "⚠️ Warning: $REMAINING cache entries still remain (may be from concurrent workflows)"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
