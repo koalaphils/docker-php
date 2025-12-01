@@ -1,56 +1,160 @@
-name: Purge All GitHub Caches
+name: Purge All GitHub Caches (API Method)
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
 
 jobs:
   purge-cache:
     runs-on: ubuntu-latest
     permissions:
-      actions: write  # Required to delete cache entries
+      actions: write
       contents: read
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Purge all caches
+      - name: Purge all caches using GitHub API
         run: |
-          echo "Fetching all cache entries..."
+          set -x
           
-          # Get all cache entries
-          CACHE_KEYS=$(gh cache list --limit 1000 --json key --jq '.[].key')
+          echo "========================================="
+          echo "🗑️  GitHub Cache Purge - API Method"
+          echo "========================================="
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
           
-          if [ -z "$CACHE_KEYS" ]; then
-            echo "No cache entries found."
-            exit 0
+          # GitHub CLI version
+          echo "GitHub CLI version:"
+          gh --version
+          echo ""
+          
+          TOTAL_DELETED=0
+          TOTAL_FAILED=0
+          PAGE=1
+          
+          while true; do
+            echo "========================================="
+            echo "🔄 Processing Page $PAGE"
+            echo "========================================="
+          
+            # Fetch caches using GitHub API with pagination
+            echo "Fetching caches from API (page $PAGE, per_page=100)..."
+            RESPONSE=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "repos/{owner}/{repo}/actions/caches?per_page=100&page=${PAGE}" 2>&1)
+          
+            API_EXIT_CODE=$?
+          
+            if [ $API_EXIT_CODE -ne 0 ]; then
+              echo "❌ API call failed with exit code: $API_EXIT_CODE"
+              echo "Response: $RESPONSE"
+              exit 1
+            fi
+          
+            # Save response for debugging
+            echo "$RESPONSE" > "/tmp/caches_page_${PAGE}.json"
+            echo "Response saved to: /tmp/caches_page_${PAGE}.json"
+          
+            # Count caches in this page
+            CACHE_COUNT=$(echo "$RESPONSE" | jq '.actions_caches | length')
+            echo "Caches found in this page: $CACHE_COUNT"
+          
+            if [ "$CACHE_COUNT" -eq 0 ]; then
+              echo "No more caches found. Finished!"
+              break
+            fi
+          
+            # Display cache details
+            echo ""
+            echo "📋 Caches in this page:"
+            echo "$RESPONSE" | jq -r '.actions_caches[] | "  ID: \(.id) | Key: \(.key) | Size: \((.size_in_bytes / 1024 / 1024 * 100 | floor) / 100)MB | Created: \(.created_at)"'
+            echo ""
+          
+            # Delete each cache
+            COUNTER=0
+            for cache_id in $(echo "$RESPONSE" | jq -r '.actions_caches[].id'); do
+              ((COUNTER++))
+              cache_key=$(echo "$RESPONSE" | jq -r ".actions_caches[] | select(.id==$cache_id) | .key")
+              cache_size=$(echo "$RESPONSE" | jq -r ".actions_caches[] | select(.id==$cache_id) | .size_in_bytes")
+              cache_size_mb=$(echo "scale=2; $cache_size / 1024 / 1024" | bc 2>/dev/null || echo "N/A")
+          
+              echo "---"
+              echo "[$COUNTER/$CACHE_COUNT] Deleting cache"
+              echo "  ID: $cache_id"
+              echo "  Key: $cache_key"
+              echo "  Size: ${cache_size_mb}MB"
+          
+              DELETE_RESPONSE=$(gh api \
+                --method DELETE \
+                -H "Accept: application/vnd.github+json" \
+                "repos/{owner}/{repo}/actions/caches/${cache_id}" 2>&1)
+          
+              DELETE_EXIT_CODE=$?
+          
+              if [ $DELETE_EXIT_CODE -eq 0 ]; then
+                echo "  ✅ Successfully deleted"
+                ((TOTAL_DELETED++))
+              else
+                echo "  ❌ Failed to delete"
+                echo "  Exit code: $DELETE_EXIT_CODE"
+                echo "  Response: $DELETE_RESPONSE"
+                ((TOTAL_FAILED++))
+              fi
+            done
+          
+            echo ""
+            echo "📊 Page $PAGE Summary:"
+            echo "  Processed: $CACHE_COUNT caches"
+            echo "  Total deleted so far: $TOTAL_DELETED"
+            echo "  Total failed so far: $TOTAL_FAILED"
+            echo ""
+          
+            ((PAGE++))
+          
+            # Safety check
+            if [ $PAGE -gt 100 ]; then
+              echo "⚠️  Reached maximum pages (100). Stopping."
+              break
+            fi
+          
+            # Small delay to avoid rate limiting
+            echo "Waiting 1 second before next page..."
+            sleep 1
+          done
+          
+          echo ""
+          echo "========================================="
+          echo "✅ Cache Purge Completed!"
+          echo "========================================="
+          echo "Ended at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "📊 Final Statistics:"
+          echo "  Total pages processed: $((PAGE - 1))"
+          echo "  Total caches deleted: $TOTAL_DELETED"
+          echo "  Total failures: $TOTAL_FAILED"
+          if [ $((TOTAL_DELETED + TOTAL_FAILED)) -gt 0 ]; then
+            SUCCESS_RATE=$(echo "scale=2; $TOTAL_DELETED * 100 / ($TOTAL_DELETED + $TOTAL_FAILED)" | bc)
+            echo "  Success rate: ${SUCCESS_RATE}%"
           fi
+          echo "========================================="
           
-          # Count total caches
-          TOTAL=$(echo "$CACHE_KEYS" | wc -l)
-          echo "Found $TOTAL cache entries to delete."
-          
-          # Delete each cache entry
-          COUNTER=0
-          while IFS= read -r key; do
-            ((COUNTER++))
-            echo "[$COUNTER/$TOTAL] Deleting cache: $key"
-            gh cache delete "$key" --confirm || echo "Failed to delete $key (may already be deleted)"
-          done <<< "$CACHE_KEYS"
-          
-          echo "✅ Cache purge completed!"
+          set +x
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Verify cache deletion
+      - name: Final verification
         run: |
-          REMAINING=$(gh cache list --limit 100 --json key --jq '.[].key' | wc -l)
-          echo "Remaining cache entries: $REMAINING"
+          echo ""
+          echo "🔍 Final cache count check..."
+          REMAINING=$(gh cache list --limit 10 --json id --jq '. | length')
           
           if [ "$REMAINING" -eq 0 ]; then
             echo "✅ All caches successfully purged!"
           else
-            echo "⚠️ Warning: $REMAINING cache entries still remain (may be from concurrent workflows)"
+            echo "⚠️  $REMAINING cache(es) still remain"
+            gh cache list --limit 10
           fi
         env:
           GH_TOKEN: ${{ github.token }}
