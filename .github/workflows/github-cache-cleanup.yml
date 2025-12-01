@@ -1,4 +1,4 @@
-name: Purge All GitHub Caches (API Method)
+name: Purge All GitHub Caches
 
 on:
   workflow_dispatch:
@@ -66,25 +66,28 @@ jobs:
               break
             fi
           
-            # Display cache details
+            # Display cache details (simplified)
             echo ""
             echo "📋 Caches in this page:"
-            echo "$RESPONSE" | jq -r '.actions_caches[] | "  ID: \(.id) | Key: \(.key) | Size: \((.size_in_bytes / 1024 / 1024 * 100 | floor) / 100)MB | Created: \(.created_at)"'
+            echo "$RESPONSE" | jq -r '.actions_caches[] | "  ID: \(.id) | Key: \(.key) | Size: \(.size_in_bytes) bytes | Created: \(.created_at)"' || {
+              echo "  ⚠️  Failed to parse cache details"
+              echo "  Showing first 20 lines of response:"
+              echo "$RESPONSE" | head -20
+            }
             echo ""
           
             # Delete each cache
             COUNTER=0
-            for cache_id in $(echo "$RESPONSE" | jq -r '.actions_caches[].id'); do
+            echo "Starting deletion process..."
+          
+            # Extract all cache IDs into an array
+            IDS=$(echo "$RESPONSE" | jq -r '.actions_caches[].id')
+          
+            for cache_id in $IDS; do
               ((COUNTER++))
-              cache_key=$(echo "$RESPONSE" | jq -r ".actions_caches[] | select(.id==$cache_id) | .key")
-              cache_size=$(echo "$RESPONSE" | jq -r ".actions_caches[] | select(.id==$cache_id) | .size_in_bytes")
-              cache_size_mb=$(echo "scale=2; $cache_size / 1024 / 1024" | bc 2>/dev/null || echo "N/A")
           
               echo "---"
-              echo "[$COUNTER/$CACHE_COUNT] Deleting cache"
-              echo "  ID: $cache_id"
-              echo "  Key: $cache_key"
-              echo "  Size: ${cache_size_mb}MB"
+              echo "[$COUNTER/$CACHE_COUNT] Deleting cache ID: $cache_id"
           
               DELETE_RESPONSE=$(gh api \
                 --method DELETE \
@@ -135,8 +138,7 @@ jobs:
           echo "  Total caches deleted: $TOTAL_DELETED"
           echo "  Total failures: $TOTAL_FAILED"
           if [ $((TOTAL_DELETED + TOTAL_FAILED)) -gt 0 ]; then
-            SUCCESS_RATE=$(echo "scale=2; $TOTAL_DELETED * 100 / ($TOTAL_DELETED + $TOTAL_FAILED)" | bc)
-            echo "  Success rate: ${SUCCESS_RATE}%"
+            echo "  Success rate: $((TOTAL_DELETED * 100 / (TOTAL_DELETED + TOTAL_FAILED)))%"
           fi
           echo "========================================="
           
