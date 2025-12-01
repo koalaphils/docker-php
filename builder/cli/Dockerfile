@@ -47,6 +47,23 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
 		LDFLAGS="$PHP_LDFLAGS" \
     ; \
 \
+# Install PHP extensions built into the official image \
+    docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype --with-avif; \
+    docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        dba \
+        gd \
+        gettext \
+        intl \
+        mysqli \
+        pcntl \
+        pdo \
+        pdo_mysql \
+        pdo_sqlite \
+        sockets \
+        xsl \
+        zip; \
+    \
 # Install PHP extensions from source using PECL \
     pecl install --onlyreqdeps --nobuild igbinary; \
         cd "$(pecl config-get temp_dir)/igbinary"; \
@@ -91,23 +108,6 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         cd -; \
         docker-php-ext-enable xhprof; \
 \
-# Install PHP extensions built into the official image \
-    docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype --with-avif; \
-    docker-php-ext-install -j"$(nproc)" \
-        bcmath \
-        dba \
-        gd \
-        gettext \
-        intl \
-        mysqli \
-        pcntl \
-        pdo \
-        pdo_mysql \
-        pdo_sqlite \
-        sockets \
-        xsl \
-        zip; \
-    \
 # Install additional PHP extensions using PIE for easier management and to get the latest stable versions \
     pie install --skip-enable-extension apcu/apcu  && \
     pie install --skip-enable-extension imagick/imagick && \
