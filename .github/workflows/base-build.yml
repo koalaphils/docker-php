@@ -60,8 +60,8 @@ jobs:
             github_token=${{ secrets.GITHUB_TOKEN }}
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64,linux/arm64
-          cache-from: ${{ github.run_attempt == 1 && format('type=gha,scope={0}-{1}-{2}', inputs.version, inputs.variant, steps.compute_hash.outputs.scope_hash) || '' }}
-          cache-to: type=gha,mode=max,scope=${{ inputs.version }}-${{ inputs.variant }}-${{ steps.compute_hash.outputs.scope_hash }}
+          cache-from: ${{ github.run_attempt == 1 && format('type=registry,ref=ghcr.io/{0}/cache/php:{1}-{2}-{3}-{4}', github.repository_owner, inputs.version, inputs.variant, steps.compute_hash.outputs.scope_hash) || '' }}
+          cache-to: type=registry,mode=max,ref=${{ format('ghcr.io/{0}/cache/php:{1}-{2}-{3}-{4}', github.repository_owner, inputs.version, inputs.variant, steps.compute_hash.outputs.scope_hash) }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
