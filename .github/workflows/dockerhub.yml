@@ -29,7 +29,6 @@ permissions:
 jobs:
   base-images:
     strategy:
-      max-parallel: 8
       matrix:
         version:
           - '8.4.15'
@@ -49,7 +48,6 @@ jobs:
   build-images:
     needs: base-images
     strategy:
-      max-parallel: 8
       matrix:
         version:
           - '8.4.15'

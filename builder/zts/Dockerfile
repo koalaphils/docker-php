@@ -15,7 +15,7 @@ COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     composer config --global github-oauth.github.com $GITHUB_TOKEN; \
     savedAptMark="$(apt-mark showmanual)"; \
-    apt-get -o Acquire::ForceIPv4=true update && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
         $PHPIZE_DEPS \
         libicu-dev \
@@ -138,29 +138,4 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
       xdebug  || { echo "Could not enable some extensions"; exit 1; }; \
     \
 # check all installed extensions \
-    pie show --all; \
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies \
-    apt-mark auto '.*' > /dev/null; \
-    [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
-    find /usr/local -type f -executable -exec ldd '{}' ';' \
-        | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); printf "*%s\n", so }' \
-        | sort -u \
-        | xargs -rt dpkg-query --search \
-# https://manpages.debian.org/trixie/dpkg/dpkg-query.1.en.html#S (we ignore diversions and it'll be really unusual for more than one package to provide any given .so file) \
-        | awk 'sub(":$", "", $1) { print $1 }' \
-        | sort -u \
-        | xargs -r apt-mark manual \
-    ; \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-    apt-get dist-clean; \
-    \
-# update pecl channel definitions https://github.com/docker-library/php/issues/443 \
-    pecl update-channels; \
-    rm -rf /tmp/pear ~/.pearrc; \
-    \
-# remove all extensions by default except for igbinary and msgpack \
-    rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
-    rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
-# smoke test \
-    php -m; \
     pie show --all;
