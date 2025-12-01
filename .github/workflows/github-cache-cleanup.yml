@@ -11,149 +11,106 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Purge all caches using GitHub API
+      - name: Purge all caches
         run: |
           set -x
           
           echo "========================================="
-          echo "🗑️  GitHub Cache Purge - API Method"
+          echo "🗑️  Purging All GitHub Caches"
           echo "========================================="
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo ""
           
-          # GitHub CLI version
-          echo "GitHub CLI version:"
-          gh --version
-          echo ""
-          
           TOTAL_DELETED=0
           TOTAL_FAILED=0
-          PAGE=1
+          ITERATION=1
           
           while true; do
             echo "========================================="
-            echo "🔄 Processing Page $PAGE"
+            echo "🔄 Iteration $ITERATION"
             echo "========================================="
           
-            # Fetch caches using GitHub API with pagination
-            echo "Fetching caches from API (page $PAGE, per_page=100)..."
-            RESPONSE=$(gh api \
-              -H "Accept: application/vnd.github+json" \
-              "repos/{owner}/{repo}/actions/caches?per_page=100&page=${PAGE}" 2>&1)
+            # Get cache IDs (limit 100 per iteration)
+            echo "Fetching cache IDs..."
+            CACHE_IDS=$(gh cache list --limit 100 --json id --jq '.[].id' 2>&1)
+            LIST_EXIT_CODE=$?
           
-            API_EXIT_CODE=$?
-          
-            if [ $API_EXIT_CODE -ne 0 ]; then
-              echo "❌ API call failed with exit code: $API_EXIT_CODE"
-              echo "Response: $RESPONSE"
+            if [ $LIST_EXIT_CODE -ne 0 ]; then
+              echo "❌ Failed to list caches"
+              echo "Output: $CACHE_IDS"
               exit 1
             fi
           
-            # Save response for debugging
-            echo "$RESPONSE" > "/tmp/caches_page_${PAGE}.json"
-            echo "Response saved to: /tmp/caches_page_${PAGE}.json"
-          
-            # Count caches in this page
-            CACHE_COUNT=$(echo "$RESPONSE" | jq '.actions_caches | length')
-            echo "Caches found in this page: $CACHE_COUNT"
-          
-            if [ "$CACHE_COUNT" -eq 0 ]; then
-              echo "No more caches found. Finished!"
+            # Check if empty
+            if [ -z "$CACHE_IDS" ]; then
+              echo "No more caches found. Done!"
               break
             fi
           
-            # Display cache details (simplified)
+            # Count caches
+            CACHE_COUNT=$(echo "$CACHE_IDS" | wc -l)
+            echo "Found $CACHE_COUNT caches to delete"
             echo ""
-            echo "📋 Caches in this page:"
-            echo "$RESPONSE" | jq -r '.actions_caches[] | "  ID: \(.id) | Key: \(.key) | Size: \(.size_in_bytes) bytes | Created: \(.created_at)"' || {
-              echo "  ⚠️  Failed to parse cache details"
-              echo "  Showing first 20 lines of response:"
-              echo "$RESPONSE" | head -20
-            }
+          
+            # Show cache details
+            echo "📋 Cache details:"
+            gh cache list --limit 100 2>&1 | head -20
             echo ""
           
             # Delete each cache
             COUNTER=0
-            echo "Starting deletion process..."
-          
-            # Extract all cache IDs into an array
-            IDS=$(echo "$RESPONSE" | jq -r '.actions_caches[].id')
-          
-            for cache_id in $IDS; do
+            for cache_id in $CACHE_IDS; do
               ((COUNTER++))
-          
-              echo "---"
               echo "[$COUNTER/$CACHE_COUNT] Deleting cache ID: $cache_id"
           
-              DELETE_RESPONSE=$(gh api \
-                --method DELETE \
-                -H "Accept: application/vnd.github+json" \
-                "repos/{owner}/{repo}/actions/caches/${cache_id}" 2>&1)
-          
-              DELETE_EXIT_CODE=$?
-          
-              if [ $DELETE_EXIT_CODE -eq 0 ]; then
-                echo "  ✅ Successfully deleted"
+              if gh cache delete "$cache_id" 2>&1; then
+                echo "  ✅ Deleted"
                 ((TOTAL_DELETED++))
               else
-                echo "  ❌ Failed to delete"
-                echo "  Exit code: $DELETE_EXIT_CODE"
-                echo "  Response: $DELETE_RESPONSE"
+                echo "  ❌ Failed"
                 ((TOTAL_FAILED++))
               fi
             done
           
             echo ""
-            echo "📊 Page $PAGE Summary:"
-            echo "  Processed: $CACHE_COUNT caches"
-            echo "  Total deleted so far: $TOTAL_DELETED"
-            echo "  Total failed so far: $TOTAL_FAILED"
+            echo "📊 Iteration $ITERATION Summary:"
+            echo "  Deleted: $COUNTER caches"
+            echo "  Total deleted: $TOTAL_DELETED"
+            echo "  Total failed: $TOTAL_FAILED"
             echo ""
           
-            ((PAGE++))
+            ((ITERATION++))
           
-            # Safety check
-            if [ $PAGE -gt 100 ]; then
-              echo "⚠️  Reached maximum pages (100). Stopping."
+            if [ $ITERATION -gt 50 ]; then
+              echo "⚠️  Reached 50 iterations. Stopping."
               break
             fi
           
-            # Small delay to avoid rate limiting
-            echo "Waiting 1 second before next page..."
             sleep 1
           done
           
           echo ""
           echo "========================================="
-          echo "✅ Cache Purge Completed!"
+          echo "✅ Purge Completed!"
           echo "========================================="
           echo "Ended at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo ""
-          echo "📊 Final Statistics:"
-          echo "  Total pages processed: $((PAGE - 1))"
-          echo "  Total caches deleted: $TOTAL_DELETED"
-          echo "  Total failures: $TOTAL_FAILED"
-          if [ $((TOTAL_DELETED + TOTAL_FAILED)) -gt 0 ]; then
-            echo "  Success rate: $((TOTAL_DELETED * 100 / (TOTAL_DELETED + TOTAL_FAILED)))%"
-          fi
+          echo "Total deleted: $TOTAL_DELETED"
+          echo "Total failed: $TOTAL_FAILED"
           echo "========================================="
           
           set +x
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Final verification
+      - name: Verify
         run: |
           echo ""
-          echo "🔍 Final cache count check..."
-          REMAINING=$(gh cache list --limit 10 --json id --jq '. | length')
+          echo "🔍 Verification:"
+          REMAINING=$(gh cache list --limit 10 --json id --jq '. | length' 2>&1)
           
           if [ "$REMAINING" -eq 0 ]; then
-            echo "✅ All caches successfully purged!"
+            echo "✅ All caches purged successfully!"
           else
             echo "⚠️  $REMAINING cache(es) still remain"
             gh cache list --limit 10
