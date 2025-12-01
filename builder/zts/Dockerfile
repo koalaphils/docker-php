@@ -15,7 +15,7 @@ COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     composer config --global github-oauth.github.com $GITHUB_TOKEN; \
     savedAptMark="$(apt-mark showmanual)"; \
-    apt-get && \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
         $PHPIZE_DEPS \
         libicu-dev \
