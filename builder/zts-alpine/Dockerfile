@@ -136,25 +136,4 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
       xdebug  || { echo "Could not enable some extensions"; exit 1; }; \
     \
 # check all installed extensions \
-    pie show --all; \
-# Cleanup \
-	runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	apk add --no-cache $runDeps; \
-	\
-	apk del --no-network .build-deps; \
-	\
-# update pecl channel definitions https://github.com/docker-library/php/issues/443
-	pecl update-channels; \
-	rm -rf /tmp/pear ~/.pearrc; \
-	\
-# remove all extensions by default except for igbinary and msgpack \
-    rm -rf $PHP_INI_DIR/conf.d/docker-php-ext-*.ini; \
-    rm -rf /tmp/* ~/.pearrc /var/lib/apt/lists/* /var/cache/*; \
-# smoke test
-	php -m; \
     pie show --all;

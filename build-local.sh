@@ -129,7 +129,7 @@ build_base_image() {
     
     if [ -n "$github_token" ]; then
         echo -e "${YELLOW}Using provided GitHub token${NC}"
-        echo "$github_token" | docker build \
+        echo "$github_token" | docker buildx build \
             --pull \
             --file "$dockerfile" \
             --build-arg PHP_VERSION="$version" \
@@ -138,7 +138,7 @@ build_base_image() {
             .
     else
         echo -e "${YELLOW}Warning: No GitHub token provided. Build may fail if private repositories are accessed.${NC}"
-        docker build \
+        docker buildx build \
             --pull \
             --file "$dockerfile" \
             --build-arg PHP_VERSION="$version" \
@@ -192,7 +192,7 @@ build_final_image() {
     echo -e "${YELLOW}Ensuring official base image is up-to-date: php:${version}-${variant}${NC}"
     docker pull "php:${version}-${variant}" >/dev/null || true
 
-    docker build \
+    docker buildx build \
         --file "$dockerfile" \
         --build-arg PHP_VERSION="$version" \
         $build_contexts \
