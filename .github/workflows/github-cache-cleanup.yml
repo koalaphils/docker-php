@@ -31,9 +31,9 @@ jobs:
             echo "🔄 Iteration $ITERATION"
             echo "========================================="
           
-            # Get cache IDs (limit 100 per iteration)
-            echo "Fetching cache IDs..."
-            CACHE_IDS=$(gh cache list --limit 100 --json id --jq '.[].id' 2>&1)
+            # Get cache IDs using API (no git repo needed)
+            echo "Fetching cache IDs via API..."
+            CACHE_IDS=$(gh api "repos/{owner}/{repo}/actions/caches?per_page=100" --jq '.actions_caches[].id' 2>&1)
             LIST_EXIT_CODE=$?
           
             if [ $LIST_EXIT_CODE -ne 0 ]; then
@@ -55,7 +55,7 @@ jobs:
           
             # Show cache details
             echo "📋 Cache details:"
-            gh cache list --limit 100 2>&1 | head -20
+            gh api "repos/{owner}/{repo}/actions/caches?per_page=20" --jq '.actions_caches[] | "ID: \(.id) | Key: \(.key) | Size: \(.size_in_bytes) bytes"' 2>&1 | head -20
             echo ""
           
             # Delete each cache
@@ -64,7 +64,7 @@ jobs:
               ((COUNTER++))
               echo "[$COUNTER/$CACHE_COUNT] Deleting cache ID: $cache_id"
           
-              if gh cache delete "$cache_id" 2>&1; then
+              if gh api --method DELETE "repos/{owner}/{repo}/actions/caches/$cache_id" 2>&1; then
                 echo "  ✅ Deleted"
                 ((TOTAL_DELETED++))
               else
@@ -107,13 +107,13 @@ jobs:
         run: |
           echo ""
           echo "🔍 Verification:"
-          REMAINING=$(gh cache list --limit 10 --json id --jq '. | length' 2>&1)
+          REMAINING=$(gh api "repos/{owner}/{repo}/actions/caches?per_page=10" --jq '.actions_caches | length' 2>&1)
           
           if [ "$REMAINING" -eq 0 ]; then
             echo "✅ All caches purged successfully!"
           else
             echo "⚠️  $REMAINING cache(es) still remain"
-            gh cache list --limit 10
+            gh api "repos/{owner}/{repo}/actions/caches?per_page=10" --jq '.actions_caches[] | "ID: \(.id) | Key: \(.key)"'
           fi
         env:
           GH_TOKEN: ${{ github.token }}
