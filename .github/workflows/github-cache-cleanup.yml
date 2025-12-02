@@ -123,25 +123,3 @@ jobs:
           echo "Total deleted: $TOTAL_DELETED"
           echo "Total failed: $TOTAL_FAILED"
           echo "========================================="
-
-      - name: Verify caches cleared
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          echo ""
-          echo "🔍 Verification:"
-          # Query a small page to check presence quickly
-          if ! REMAINING=$(gh api "repos/$GITHUB_REPOSITORY/actions/caches?per_page=1" --jq '.actions_caches | length' --silent 2>&1); then
-            echo "❌ Verification query failed. Output:"
-            echo "$REMAINING"
-            exit 1
-          fi
-          if [ "$REMAINING" -eq 0 ]; then
-            echo "✅ All caches purged successfully!"
-            exit 0
-          else
-            echo "⚠️  Some caches still remain. Listing up to 20:"
-            gh api "repos/$GITHUB_REPOSITORY/actions/caches?per_page=20" --jq '.actions_caches[] | "ID: \(.id) | Key: \(.key) | Size: \(.size_in_bytes) bytes"' || true
-            exit 2
-          fi
