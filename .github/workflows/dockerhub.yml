@@ -68,6 +68,12 @@ jobs:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
       latest: '8.4.15'
+  # Cleanup github caches on PRs
+  cleanup-cache:
+    needs: build-images
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/github-cache-cleanup.yml
+    secrets: inherit
   # Add this new summary job
   build-complete:
     needs: build-images
