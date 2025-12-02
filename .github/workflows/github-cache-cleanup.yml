@@ -14,56 +14,68 @@ jobs:
       - name: Purge all caches
         run: |
           set -x
-          
+
           echo "========================================="
           echo "🗑️  Purging All GitHub Caches"
           echo "========================================="
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Started at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo ""
-          
+
           TOTAL_DELETED=0
           TOTAL_FAILED=0
           ITERATION=1
-          
+
           while true; do
             echo "========================================="
             echo "🔄 Iteration $ITERATION"
             echo "========================================="
-          
+
             # Get cache IDs using API with explicit repo path
             echo "Fetching cache IDs via API..."
-            CACHE_IDS=$(gh api "repos/$GITHUB_REPOSITORY/actions/caches?per_page=100" --jq '.actions_caches[].id' 2>&1)
+            OUTPUT=$(gh api "repos/$GITHUB_REPOSITORY/actions/caches?per_page=100" --jq '.actions_caches[].id' 2>&1)
             LIST_EXIT_CODE=$?
-          
+
             if [ $LIST_EXIT_CODE -ne 0 ]; then
               echo "❌ Failed to list caches"
-              echo "Output: $CACHE_IDS"
+              echo "Output: $OUTPUT"
               exit 1
             fi
-          
+
+            # Read output into an array to preserve one ID per element (handles newlines/spaces)
+            mapfile -t CACHE_IDS <<< "$OUTPUT"
+
+            # Remove any empty elements (if any)
+            FILTERED_CACHE_IDS=()
+            for id in "${CACHE_IDS[@]}"; do
+              if [ -n "$id" ]; then
+                FILTERED_CACHE_IDS+=("$id")
+              fi
+            done
+            CACHE_IDS=("${FILTERED_CACHE_IDS[@]}")
+
             # Check if empty
-            if [ -z "$CACHE_IDS" ]; then
+            if [ ${#CACHE_IDS[@]} -eq 0 ]; then
               echo "No more caches found. Done!"
               break
             fi
-          
+
             # Count caches
-            CACHE_COUNT=$(echo "$CACHE_IDS" | wc -l)
+            CACHE_COUNT=${#CACHE_IDS[@]}
             echo "Found $CACHE_COUNT caches to delete"
             echo ""
-          
+
             # Show cache details
             echo "📋 Cache details:"
             gh api "repos/$GITHUB_REPOSITORY/actions/caches?per_page=20" --jq '.actions_caches[] | "ID: \(.id) | Key: \(.key) | Size: \(.size_in_bytes) bytes"' 2>&1 | head -20
             echo ""
-          
+
             # Delete each cache
             COUNTER=0
-            for cache_id in $CACHE_IDS; do
+            for cache_id in "${CACHE_IDS[@]}"; do
               ((COUNTER++))
               echo "[$COUNTER/$CACHE_COUNT] Deleting cache ID: $cache_id"
-          
+
               if gh api --method DELETE "repos/$GITHUB_REPOSITORY/actions/caches/$cache_id" 2>&1; then
                 echo "  ✅ Deleted"
                 ((TOTAL_DELETED++))
@@ -72,24 +84,24 @@ jobs:
                 ((TOTAL_FAILED++))
               fi
             done
-          
+
             echo ""
             echo "📊 Iteration $ITERATION Summary:"
             echo "  Deleted: $COUNTER caches"
             echo "  Total deleted: $TOTAL_DELETED"
             echo "  Total failed: $TOTAL_FAILED"
             echo ""
-          
+
             ((ITERATION++))
-          
+
             if [ $ITERATION -gt 50 ]; then
               echo "⚠️  Reached 50 iterations. Stopping."
               break
             fi
-          
+
             sleep 1
           done
-          
+
           echo ""
           echo "========================================="
           echo "✅ Purge Completed!"
@@ -98,7 +110,7 @@ jobs:
           echo "Total deleted: $TOTAL_DELETED"
           echo "Total failed: $TOTAL_FAILED"
           echo "========================================="
-          
+
           set +x
         env:
           GH_TOKEN: ${{ github.token }}
@@ -108,7 +120,7 @@ jobs:
           echo ""
           echo "🔍 Verification:"
           REMAINING=$(gh api "repos/$GITHUB_REPOSITORY/actions/caches?per_page=10" --jq '.actions_caches | length' 2>&1)
-          
+
           if [ "$REMAINING" -eq 0 ]; then
             echo "✅ All caches purged successfully!"
           else
