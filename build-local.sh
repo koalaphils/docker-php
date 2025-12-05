@@ -16,6 +16,7 @@ PHP_VERSION=""
 VARIANT=""
 BUILD_MODE=""
 GITHUB_TOKEN=""
+DOCKER_BUILD_OPTS=""
 
 # Function to print usage
 usage() {
@@ -27,6 +28,7 @@ Options:
     -t, --variant VARIANT       Variant type (cli, cli-alpine, zts, zts-alpine, apache, fpm, fpm-alpine)
     -m, --mode MODE             Build mode: 'base' for prebuild images, 'final' for final images, 'both' for both
     -g, --github-token TOKEN    GitHub token (optional, will try to retrieve from composer if not provided)
+    -o, --docker-opts OPTS      Extra options passed to 'docker buildx build' (e.g. \`--no-cache --progress=plain\`)
     -h, --help                  Display this help message
 
 Examples:
@@ -39,8 +41,8 @@ Examples:
     # Build both base and final images
     $0 --version 8.4.15 --variant cli --mode both
 
-    # Build with custom GitHub token
-    $0 --version 8.4.15 --variant cli --mode both --github-token ghp_xxxxx
+    # Build with custom GitHub token and extra docker build options
+    $0 --version 8.4.15 --variant cli --mode both --github-token ghp_xxxxx --docker-opts "--no-cache --progress=plain"
 
 EOF
     exit 1
@@ -49,10 +51,10 @@ EOF
 # Function to retrieve GitHub token from composer
 get_github_token_from_composer() {
     echo -e "${YELLOW}Attempting to retrieve GitHub token from Composer...${NC}" >&2
-    
+
     # Try to get token from composer config
     local token=$(composer config --global github-oauth.github.com 2>/dev/null || echo "")
-    
+
     if [ -n "$token" ]; then
         echo -e "${GREEN}GitHub token retrieved from Composer configuration${NC}" >&2
         echo "$token"
@@ -66,13 +68,13 @@ get_github_token_from_composer() {
 validate_variant() {
     local variant=$1
     local valid_variants=("cli" "cli-alpine" "zts" "zts-alpine" "apache" "fpm" "fpm-alpine")
-    
+
     for valid in "${valid_variants[@]}"; do
         if [ "$variant" = "$valid" ]; then
             return 0
         fi
     done
-    
+
     echo -e "${RED}Error: Invalid variant '$variant'${NC}"
     echo "Valid variants: ${valid_variants[*]}"
     exit 1
@@ -112,24 +114,27 @@ build_base_image() {
     local version=$1
     local variant=$2
     local github_token=$3
-    
+
     echo -e "${GREEN}======================================${NC}"
     echo -e "${GREEN}Building BASE image for PHP ${version} ${variant}${NC}"
     echo -e "${GREEN}======================================${NC}"
-    
+
     local dockerfile="builder/${variant}/Dockerfile"
     local image_tag="php:${version}-${variant}-prebuild"
-    
+
     if [ ! -f "$dockerfile" ]; then
         echo -e "${RED}Error: Dockerfile not found: $dockerfile${NC}"
         exit 1
     fi
-    
+
     echo -e "${YELLOW}Building: $image_tag${NC}"
-    
+
+    # Split DOCKER_BUILD_OPTS into an array (safe splitting)
+    read -r -a DOCKER_BUILD_OPTS_ARR <<< "$DOCKER_BUILD_OPTS"
+
     if [ -n "$github_token" ]; then
         echo -e "${YELLOW}Using provided GitHub token${NC}"
-        echo "$github_token" | docker buildx build \
+        echo "$github_token" | docker buildx build "${DOCKER_BUILD_OPTS_ARR[@]}" \
             --pull \
             --file "$dockerfile" \
             --build-arg PHP_VERSION="$version" \
@@ -138,14 +143,14 @@ build_base_image() {
             .
     else
         echo -e "${YELLOW}Warning: No GitHub token provided. Build may fail if private repositories are accessed.${NC}"
-        docker buildx build \
+        docker buildx build "${DOCKER_BUILD_OPTS_ARR[@]}" \
             --pull \
             --file "$dockerfile" \
             --build-arg PHP_VERSION="$version" \
             --tag "$image_tag" \
             .
     fi
-    
+
     echo -e "${GREEN}Base image built successfully: $image_tag${NC}"
 }
 
@@ -153,22 +158,22 @@ build_base_image() {
 build_final_image() {
     local version=$1
     local variant=$2
-    
+
     echo -e "${GREEN}======================================${NC}"
     echo -e "${GREEN}Building FINAL image for PHP ${version} ${variant}${NC}"
     echo -e "${GREEN}======================================${NC}"
-    
+
     local dockerfile="Dockerfile-${variant}"
     local image_tag="php:${version}-${variant}"
-    
+
     if [ ! -f "$dockerfile" ]; then
         echo -e "${RED}Error: Dockerfile not found: $dockerfile${NC}"
         exit 1
     fi
-    
+
     # Determine which base variant is required for this variant
     local base_variant=$(get_base_variant "$variant")
-    
+
     # Check if required prebuild image exists locally
     local prebuild_image="php:${version}-${base_variant}-prebuild"
     if ! docker image inspect "$prebuild_image" >/dev/null 2>&1; then
@@ -179,26 +184,29 @@ build_final_image() {
         echo "  $0 --version $version --variant $variant --mode both"
         exit 1
     fi
-    
+
     local build_contexts=""
-    
+
     # Only add the specific build context needed for this variant
     build_contexts="--build-context php-${version}-${base_variant}=docker-image://php:${version}-${base_variant}-prebuild"
-    
+
     echo -e "${YELLOW}Building: $image_tag${NC}"
     echo -e "${YELLOW}Using base context: php-${version}-${base_variant}-prebuild${NC}"
-    
+
     # Pre-pull official base image to ensure it's up-to-date
     echo -e "${YELLOW}Ensuring official base image is up-to-date: php:${version}-${variant}${NC}"
     docker pull "php:${version}-${variant}" >/dev/null || true
 
-    docker buildx build \
+    # Split DOCKER_BUILD_OPTS into an array (safe splitting)
+    read -r -a DOCKER_BUILD_OPTS_ARR <<< "$DOCKER_BUILD_OPTS"
+
+    docker buildx build "${DOCKER_BUILD_OPTS_ARR[@]}" \
         --file "$dockerfile" \
         --build-arg PHP_VERSION="$version" \
         $build_contexts \
         --tag "$image_tag" \
         .
-    
+
     echo -e "${GREEN}Final image built successfully: $image_tag${NC}"
 }
 
@@ -219,6 +227,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -g|--github-token)
             GITHUB_TOKEN="$2"
+            shift 2
+            ;;
+        -o|--docker-opts)
+            DOCKER_BUILD_OPTS="$2"
             shift 2
             ;;
         -h|--help)
@@ -269,6 +281,7 @@ echo "PHP Version:       $PHP_VERSION"
 echo "Variant:           $VARIANT"
 echo "Build Mode:        $BUILD_MODE"
 echo "GitHub Token:      $([ -n "$GITHUB_TOKEN" ] && echo "Provided" || echo "Not provided")"
+echo "Docker build opts:  $([ -n "$DOCKER_BUILD_OPTS" ] && echo "$DOCKER_BUILD_OPTS" || echo "None")"
 echo -e "${GREEN}======================================${NC}"
 echo ""
 
