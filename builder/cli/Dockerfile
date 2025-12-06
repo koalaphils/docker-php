@@ -11,6 +11,16 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 
+# Replace http package sources with https
+RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/* \
+    && apt-get clean \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gnupg \
+        openssl \
+    && update-ca-certificates
+
 # Install PHP extension build dependencies
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     composer config --global github-oauth.github.com $GITHUB_TOKEN; \
@@ -40,8 +50,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         `apt-cache pkgnames licurl4 | grep dev | grep openssl | sort -V` \
         `apt-cache pkgnames unixodbc | grep dev | sort -V | head -1` \
         `apt-cache pkgnames zlib | grep dev | sort -V | head -1` \
-    && update-ca-certificates; \
-    export \
+    ; export \
 		CFLAGS="$PHP_CFLAGS" \
 		CPPFLAGS="$PHP_CPPFLAGS" \
 		LDFLAGS="$PHP_LDFLAGS" \

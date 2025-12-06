@@ -12,6 +12,16 @@ COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 COPY --link --from=composer/composer /usr/bin/composer /usr/local/bin/composer
 COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 
+# Replace http package sources with https
+RUN sed -i 's|http://|https://|g' /etc/apt/sources.list.d/* \
+    && apt-get clean \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gnupg \
+        openssl \
+    && update-ca-certificates
+
 # Install dependencies
 RUN set -eux; \
     apt-get clean; \
@@ -23,10 +33,6 @@ RUN set -eux; \
         locales \
         netcat-traditional \
         wget \
-# Add SSL support \
-        ca-certificates \
-        gnupg \
-        openssl \
 # PHP extension dependencies \
         `apt-cache pkgnames libavif | sort -V | head -1` \
         `apt-cache pkgnames libc-ares | sort -V | head -1` \
@@ -53,7 +59,6 @@ RUN set -eux; \
     apt-get dist-clean;
 
 RUN set -eux \
-    ; update-ca-certificates \
     ; docker-php-ext-enable --ini-name 0-docker-php-ext-igbinary.ini igbinary \
     ; docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack \
 # apache tweaks \
