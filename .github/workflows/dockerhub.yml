@@ -75,9 +75,15 @@ jobs:
     uses: ./.github/workflows/github-cache-cleanup.yml
     secrets: inherit
   build-complete:
-    needs: cleanup-cache
-    if: needs.cleanup-cache.result == 'success' || needs.cleanup-cache.result == 'skipped'
+    needs: [base-images, build-images, cleanup-cache]
+    if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Summary
-        run: echo "All builds completed successfully"
+      - name: Validate build results
+        run: |
+          if [ "${{ needs.base-images.result }}" != "success" ] || \
+             [ "${{ needs.build-images.result }}" != "success" ]; then
+            echo "Upstream build failed — blocking merge"
+            exit 1
+          fi
+          echo "All builds completed successfully"
