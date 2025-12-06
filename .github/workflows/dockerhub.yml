@@ -47,6 +47,7 @@ jobs:
       variant: ${{ matrix.variant }}
   build-images:
     needs: base-images
+    if: needs.base-images.result == 'success'
     strategy:
       matrix:
         version:
@@ -68,15 +69,14 @@ jobs:
       version: ${{ matrix.version }}
       variant: ${{ matrix.variant }}
       latest: '8.4.15'
-  # Cleanup github caches on PRs
   cleanup-cache:
     needs: build-images
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && needs.build-images.result == 'success'
     uses: ./.github/workflows/github-cache-cleanup.yml
     secrets: inherit
-  # Add this new summary job
   build-complete:
-    needs: build-images
+    needs: cleanup-cache
+    if: needs.cleanup-cache.result == 'success' || needs.cleanup-cache.result == 'skipped'
     runs-on: ubuntu-latest
     steps:
       - name: Summary
