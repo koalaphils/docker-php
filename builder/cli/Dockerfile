@@ -70,8 +70,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         pdo_mysql \
         pdo_sqlite \
         sockets \
-        xsl \
-        zip; \
+        xsl; \
     \
 # Install PHP extensions from source using PECL \
     pecl install --onlyreqdeps --nobuild igbinary; \
@@ -126,6 +125,8 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
 #    pie install --skip-enable-extension pdezwart/php-amqp && \
     pie install --skip-enable-extension pecl/mcrypt  && \
     pie install --skip-enable-extension pecl/pcov  && \
+    pie install --skip-enable-extension pecl/timezonedb  && \
+    pie install --skip-enable-extension pecl/zip  && \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
     pie install --skip-enable-extension supermetrics/jsonpath && \
@@ -144,7 +145,9 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
       pcov \
       redis \
       swoole \
-      xdebug  || { echo "Could not enable some extensions"; exit 1; }; \
+      timezonedb \
+      xdebug \
+      zip || { echo "Could not enable some extensions"; exit 1; }; \
     \
 # check all installed extensions \
     pie show --all;
