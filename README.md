@@ -37,6 +37,7 @@ Preinstalled extensions apart from the ones provided by the official PHP images:
 - redis
 - sockets
 - swoole
+- timezonedb
 - xdebug
 - xhprof
 - xsl
