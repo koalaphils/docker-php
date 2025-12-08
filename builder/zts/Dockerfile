@@ -47,7 +47,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         `apt-cache pkgnames libwebp | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libxsl | grep dev | sort -V | head -1` \
         `apt-cache pkgnames libzip | grep dev | sort | head -1` \
-        `apt-cache pkgnames licurl4 | grep dev | grep openssl | sort -V` \
+        `apt-cache pkgnames libcurl4 | grep dev | grep openssl | sort -V` \
         `apt-cache pkgnames unixodbc | grep dev | sort -V | head -1` \
         `apt-cache pkgnames zlib | grep dev | sort -V | head -1` \
     ; export \
