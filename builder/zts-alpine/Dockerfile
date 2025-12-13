@@ -113,6 +113,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     pie install --skip-enable-extension osmanov/pecl-ev  && \
 #    pie install --skip-enable-extension pdezwart/php-amqp && \
     pie install --skip-enable-extension pecl/mcrypt  && \
+    pie install --skip-enable-extension pecl/parallel  && \
     pie install --skip-enable-extension pecl/pcov  && \
     pie install --skip-enable-extension pecl/timezonedb  && \
     pie install --skip-enable-extension pecl/zip  && \
@@ -131,6 +132,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
       mcrypt \
       memcached \
       mongodb \
+      parallel \
       pcov \
       redis \
       swoole \
