@@ -130,7 +130,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
     pie install --skip-enable-extension supermetrics/jsonpath && \
-    pie install --skip-enable-extension swoole/swoole  && \
+    pie install --skip-enable-extension swoole/swoole --enable-swoole-curl --enable-openssl --enable-sockets  && \
     pie install --skip-enable-extension xdebug/xdebug  && \
     docker-php-ext-enable  \
 #      amqp \
