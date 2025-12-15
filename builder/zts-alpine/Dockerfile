@@ -12,6 +12,7 @@ COPY --link --from=ghcr.io/php/pie:bin /pie /usr/bin/pie
 
 # Install PHP extension build dependencies
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
+    PHP_VERSION_ID="$(php -r 'echo PHP_VERSION_ID;')"; \
     composer config --global github-oauth.github.com $GITHUB_TOKEN; \
     apk update && \
     apk add --no-cache --virtual .build-deps \
@@ -76,6 +77,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
         docker-php-ext-enable --ini-name 0-docker-php-ext-msgpack.ini msgpack; \
+    if [ "$PHP_VERSION_ID" -lt 80500 ]; then \
     pecl install --onlyreqdeps --nobuild amqp; \
         cd "$(pecl config-get temp_dir)/amqp"; \
         phpize; \
@@ -83,6 +85,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
         docker-php-ext-enable amqp; \
+    fi; \
     pecl install --onlyreqdeps --nobuild sqlsrv; \
         cd "$(pecl config-get temp_dir)/sqlsrv"; \
         phpize; \
@@ -90,6 +93,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
         docker-php-ext-enable sqlsrv; \
+    if [ "$PHP_VERSION_ID" -lt 80500 ]; then \
     pecl install --onlyreqdeps --nobuild pdo_sqlsrv; \
         cd "$(pecl config-get temp_dir)/pdo_sqlsrv"; \
         phpize; \
@@ -97,6 +101,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
         make && make test && make install && make clean || exit 1; \
         cd -; \
         docker-php-ext-enable pdo_sqlsrv; \
+    fi; \
     pecl install --onlyreqdeps --nobuild xhprof; \
         cd "$(pecl config-get temp_dir)/xhprof/extension"; \
         phpize; \
@@ -120,7 +125,8 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
     pie install --skip-enable-extension php-memcached/php-memcached --enable-memcached-json --enable-memcached-igbinary --enable-memcached-msgpack  && \
     pie install --skip-enable-extension phpredis/phpredis --enable-redis-igbinary --enable-redis-msgpack  && \
     pie install --skip-enable-extension supermetrics/jsonpath && \
-    pie install --skip-enable-extension swoole/swoole && \
+    ( [ "$PHP_VERSION_ID" -lt 80500 ] && \
+      pie install --skip-enable-extension swoole/swoole || true ) && \
     pie install --skip-enable-extension xdebug/xdebug && \
     docker-php-ext-enable  \
 #      amqp \
@@ -135,7 +141,7 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN set -eux; \
       parallel \
       pcov \
       redis \
-      swoole \
+      $( [ "$PHP_VERSION_ID" -lt 80500 ] && echo swoole ) \
       timezonedb \
       xdebug \
       zip || { echo "Could not enable some extensions"; exit 1; }; \
