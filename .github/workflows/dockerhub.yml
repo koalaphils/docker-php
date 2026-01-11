@@ -36,12 +36,11 @@ jobs:
           - '8.4.16'
           - '8.3.29'
           - '8.2.30'
-          - '8.1.34'
         variant:
-          - cli
           - cli-alpine
-          - zts
           - zts-alpine
+          - cli
+          - zts
     uses: ./.github/workflows/base-build.yml
     secrets: inherit
     with:
@@ -54,19 +53,18 @@ jobs:
       max-parallel: 14
       matrix:
         version:
-          - '8.1.34'
           - '8.2.30'
           - '8.3.29'
           - '8.4.16'
           - '8.5.1'
         variant:
+          - cli-alpine
+          - fpm-alpine
+          - zts-alpine
           - apache
           - cli
-          - cli-alpine
           - fpm
-          - fpm-alpine
           - zts
-          - zts-alpine
     uses: ./.github/workflows/image-build.yml
     secrets: inherit
     with:
